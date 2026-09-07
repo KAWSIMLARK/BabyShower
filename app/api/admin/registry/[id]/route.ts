@@ -40,11 +40,25 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 
   const supabase = createClient();
-  const { error } = await supabase.from("gift_items").update(update).eq("id", params.id);
+  // .select("id") permet de détecter une écriture RLS silencieusement
+  // bloquée (0 ligne touchée mais aucune erreur) plutôt que de rapporter un
+  // faux succès.
+  const { data, error } = await supabase
+    .from("gift_items")
+    .update(update)
+    .eq("id", params.id)
+    .select("id");
 
   if (error) {
     console.error("Erreur lors de la modification du cadeau :", error);
     return NextResponse.json({ message: "Impossible de modifier ce cadeau." }, { status: 500 });
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json(
+      { message: "Ce cadeau est introuvable ou l'action n'a pas été autorisée." },
+      { status: 404 },
+    );
   }
 
   return NextResponse.json({ message: "Cadeau mis à jour." });
@@ -52,11 +66,22 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   const supabase = createClient();
-  const { error } = await supabase.from("gift_items").delete().eq("id", params.id);
+  const { data, error } = await supabase
+    .from("gift_items")
+    .delete()
+    .eq("id", params.id)
+    .select("id");
 
   if (error) {
     console.error("Erreur lors de la suppression du cadeau :", error);
     return NextResponse.json({ message: "Impossible de supprimer ce cadeau." }, { status: 500 });
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json(
+      { message: "Ce cadeau est introuvable ou la suppression n'a pas été autorisée." },
+      { status: 404 },
+    );
   }
 
   return NextResponse.json({ message: "Cadeau supprimé." });

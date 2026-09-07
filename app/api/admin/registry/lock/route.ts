@@ -32,26 +32,34 @@ export async function POST(request: Request) {
         );
       }
       const { hash, salt } = hashPassword(body.password);
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("registry_lock")
         .update({ is_locked: true, password_hash: hash, password_salt: salt })
-        .eq("id", true);
+        .eq("id", true)
+        .select("id");
 
       if (error) {
         console.error("Erreur lors de la création du mot de passe :", error);
         return NextResponse.json({ message: "Impossible de verrouiller le registre." }, { status: 500 });
       }
+      if (!data || data.length === 0) {
+        return NextResponse.json({ message: "Action non autorisée." }, { status: 404 });
+      }
       return NextResponse.json({ locked: true });
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("registry_lock")
       .update({ is_locked: true })
-      .eq("id", true);
+      .eq("id", true)
+      .select("id");
 
     if (error) {
       console.error("Erreur lors du verrouillage :", error);
       return NextResponse.json({ message: "Impossible de verrouiller le registre." }, { status: 500 });
+    }
+    if (!data || data.length === 0) {
+      return NextResponse.json({ message: "Action non autorisée." }, { status: 404 });
     }
     return NextResponse.json({ locked: true });
   }
@@ -64,14 +72,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Mot de passe incorrect." }, { status: 401 });
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("registry_lock")
       .update({ is_locked: false })
-      .eq("id", true);
+      .eq("id", true)
+      .select("id");
 
     if (error) {
       console.error("Erreur lors du déverrouillage :", error);
       return NextResponse.json({ message: "Impossible de déverrouiller le registre." }, { status: 500 });
+    }
+    if (!data || data.length === 0) {
+      return NextResponse.json({ message: "Action non autorisée." }, { status: 404 });
     }
     return NextResponse.json({ locked: false });
   }

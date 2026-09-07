@@ -37,11 +37,26 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
   const supabase = createClient();
 
-  const { error } = await supabase.from("rsvp_responses").update(update).eq("id", params.id);
+  // .select("id") est indispensable ici : sans lui, une politique RLS qui
+  // bloque silencieusement la ligne (0 ligne touchée) renvoie quand même un
+  // succès sans erreur — le front afficherait "mis à jour" alors que rien ne
+  // s'est passé, et la valeur reviendrait à l'ancienne au prochain chargement.
+  const { data, error } = await supabase
+    .from("rsvp_responses")
+    .update(update)
+    .eq("id", params.id)
+    .select("id");
 
   if (error) {
     console.error("Erreur de mise à jour du RSVP :", error);
     return NextResponse.json({ message: "Impossible de mettre à jour ce RSVP." }, { status: 500 });
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json(
+      { message: "Cette réponse est introuvable ou l'action n'a pas été autorisée." },
+      { status: 404 },
+    );
   }
 
   return NextResponse.json({ message: "RSVP mis à jour." });
@@ -51,11 +66,22 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   const supabase = createClient();
 
-  const { error } = await supabase.from("rsvp_responses").delete().eq("id", params.id);
+  const { data, error } = await supabase
+    .from("rsvp_responses")
+    .delete()
+    .eq("id", params.id)
+    .select("id");
 
   if (error) {
     console.error("Erreur de suppression du RSVP :", error);
     return NextResponse.json({ message: "Impossible de supprimer ce RSVP." }, { status: 500 });
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json(
+      { message: "Cette réponse est introuvable ou la suppression n'a pas été autorisée." },
+      { status: 404 },
+    );
   }
 
   return NextResponse.json({ message: "RSVP supprimé." });

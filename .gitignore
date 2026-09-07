@@ -27,3 +27,6 @@ next-env.d.ts
 # outils internes (non liés au projet)
 /.claude-flow/
 /.claude/
+/.github/
+/.impeccable/
+/PRODUCT.md
