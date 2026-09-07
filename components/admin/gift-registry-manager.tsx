@@ -44,6 +44,7 @@ export function GiftRegistryManager({
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<NewItemForm>(emptyForm);
+  const [togglingPurchasedId, setTogglingPurchasedId] = useState<string | null>(null);
 
   const [lockPrompt, setLockPrompt] = useState<"none" | "set-password" | "unlock">("none");
   const [passwordInput, setPasswordInput] = useState("");
@@ -119,6 +120,28 @@ export function GiftRegistryManager({
       }
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleTogglePurchased(item: GiftItemRow) {
+    const nextValue = !item.is_purchased;
+    setTogglingPurchasedId(item.id);
+    try {
+      const response = await fetch(`/api/admin/registry/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPurchased: nextValue }),
+      });
+      if (response.ok) {
+        setItems((prev) =>
+          prev.map((i) => (i.id === item.id ? { ...i, is_purchased: nextValue } : i)),
+        );
+      } else {
+        const data = await response.json().catch(() => null);
+        window.alert(data?.message ?? "Impossible de mettre à jour ce cadeau.");
+      }
+    } finally {
+      setTogglingPurchasedId(null);
     }
   }
 
@@ -401,9 +424,16 @@ export function GiftRegistryManager({
                   <div className="flex items-center gap-2">
                     <p className="font-semibold">{item.name}</p>
                     {!locked && (
-                      <Badge variant={item.is_purchased ? "default" : "outline"}>
-                        {item.is_purchased ? "Acheté" : "Disponible"}
-                      </Badge>
+                      <button
+                        onClick={() => handleTogglePurchased(item)}
+                        disabled={togglingPurchasedId === item.id}
+                        title="Cliquer pour corriger manuellement (ex. coché par erreur)"
+                        className="disabled:opacity-50"
+                      >
+                        <Badge variant={item.is_purchased ? "default" : "outline"}>
+                          {item.is_purchased ? "Acheté" : "Disponible"}
+                        </Badge>
+                      </button>
                     )}
                   </div>
                   {item.price != null && (

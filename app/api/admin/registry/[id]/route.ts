@@ -4,7 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  let body: { name?: string; description?: string; price?: number | null; linkUrl?: string };
+  let body: {
+    name?: string;
+    description?: string;
+    price?: number | null;
+    linkUrl?: string;
+    isPurchased?: boolean;
+  };
   try {
     body = await request.json();
   } catch {
@@ -26,6 +32,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (body.description !== undefined) update.description = body.description?.trim() || null;
   if (body.price !== undefined) update.price = body.price;
   if (body.linkUrl !== undefined) update.link_url = body.linkUrl?.trim() || null;
+  if (body.isPurchased !== undefined) {
+    // Permet à l'admin de remettre un cadeau en ligne s'il a été coché par
+    // erreur, sans devoir le supprimer et le recréer.
+    update.is_purchased = body.isPurchased;
+    update.purchased_at = body.isPurchased ? new Date().toISOString() : null;
+  }
 
   const supabase = createClient();
   const { error } = await supabase.from("gift_items").update(update).eq("id", params.id);
