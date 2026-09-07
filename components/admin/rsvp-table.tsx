@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Users, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { Download, Users, CheckCircle2, XCircle, Trash2, MessageSquareX } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,7 @@ export function AdminRsvpTable({ initialData }: { initialData: RsvpRow[] }) {
   const [rows, setRows] = useState<RsvpRow[]>(initialData);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [clearingMessageId, setClearingMessageId] = useState<string | null>(null);
 
   const stats = useMemo(() => {
     const confirmed = rows.filter((r) => r.will_attend);
@@ -98,6 +99,34 @@ export function AdminRsvpTable({ initialData }: { initialData: RsvpRow[] }) {
       }
     } finally {
       setUpdatingId(null);
+    }
+  }
+
+  async function handleClearMessage(row: RsvpRow) {
+    const confirmed = window.confirm(
+      `Retirer le message pour bébé de ${row.full_name} ? Sa présence et le reste de sa réponse resteront intacts — seul le message disparaîtra (aussi de la page d'accueil).`,
+    );
+    if (!confirmed) return;
+
+    setClearingMessageId(row.id);
+    try {
+      const response = await fetch(`/api/admin/rsvp/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clearMessage: true }),
+      });
+      if (response.ok) {
+        setRows((prev) =>
+          prev.map((r) =>
+            r.id === row.id ? { ...r, message_for_baby: null, allow_public_message: false } : r,
+          ),
+        );
+      } else {
+        const data = await response.json().catch(() => null);
+        window.alert(data?.message ?? "Impossible de retirer ce message.");
+      }
+    } finally {
+      setClearingMessageId(null);
     }
   }
 
@@ -200,7 +229,21 @@ export function AdminRsvpTable({ initialData }: { initialData: RsvpRow[] }) {
                     {row.dietary_restrictions || "—"}
                   </td>
                   <td className="max-w-xs px-4 py-3 text-muted-foreground">
-                    {row.message_for_baby || "—"}
+                    {row.message_for_baby ? (
+                      <div className="flex items-start gap-2">
+                        <span>{row.message_for_baby}</span>
+                        <button
+                          onClick={() => handleClearMessage(row)}
+                          disabled={clearingMessageId === row.id}
+                          title="Retirer ce message (garde le reste de la réponse)"
+                          className="shrink-0 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                        >
+                          <MessageSquareX className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
                     {new Date(row.created_at).toLocaleDateString("fr-CA")}
