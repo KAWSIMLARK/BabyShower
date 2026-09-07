@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { resolveIsLocked } from "@/lib/registry-lock";
 
 export const dynamic = "force-dynamic";
 
@@ -7,7 +8,10 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const supabase = createClient();
 
-  const [{ data: lockRow }, { data: items, error }] = await Promise.all([
+  const [
+    { data: lockRow, error: lockError },
+    { data: items, error },
+  ] = await Promise.all([
     supabase.from("registry_lock").select("is_locked").eq("id", true).maybeSingle(),
     supabase
       .from("gift_items")
@@ -21,7 +25,9 @@ export async function GET() {
     return NextResponse.json({ message: "Impossible de charger le registre." }, { status: 500 });
   }
 
-  const isLocked = lockRow?.is_locked ?? false;
+  if (lockError) console.error("Erreur de lecture du verrou du registre :", lockError);
+
+  const isLocked = resolveIsLocked(lockRow, lockError);
 
   // Quand le registre est verrouillé, on masque le statut d'achat AVANT même
   // qu'il ne quitte le serveur : impossible pour l'admin de le voir, même en

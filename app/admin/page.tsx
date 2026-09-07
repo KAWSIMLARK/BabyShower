@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { resolveIsLocked } from "@/lib/registry-lock";
 import { AdminRsvpTable, type RsvpRow } from "@/components/admin/rsvp-table";
 import { GiftRegistryManager, type GiftItemRow } from "@/components/admin/gift-registry-manager";
 import { LogoutButton } from "@/components/admin/logout-button";
@@ -26,7 +27,7 @@ export default async function AdminPage() {
   if (giftError) console.error("Erreur de lecture du registre de cadeaux :", giftError);
 
   const responses = (rsvpData ?? []) as RsvpRow[];
-  const isLocked = lockRow?.is_locked ?? false;
+  const isLocked = resolveIsLocked(lockRow, lockError);
   const giftItems = (
     isLocked
       ? (giftData ?? []).map((item) => ({ ...item, is_purchased: false, purchased_at: null }))
