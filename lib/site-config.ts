@@ -3,10 +3,9 @@ export const siteConfig = {
   title: "Baby Shower de Bébé Lafrenière",
   heroHeading: "Joignez-vous à nous pour célébrer l'arrivée de Bébé Lafrenière",
   heroSubheading:
-    "Un après-midi tout en douceur pour accueillir le prochain membre de la famille. Votre présence serait un beau cadeau.",
+    "Un avant-midi tout en douceur pour accueillir le prochain membre de la famille. Votre présence serait un beau cadeau.",
   eventDate: "2026-11-28",
-  // Heure à confirmer — ajuste selon l'horaire réel de l'événement.
-  eventTimeLabel: "14 h 00",
+  eventTimeLabel: "11 h 00",
   eventDateLabel: "Samedi 28 novembre 2026",
   location: {
     name: "207 rue St-Roch",
