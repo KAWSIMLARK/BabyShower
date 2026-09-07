@@ -25,21 +25,21 @@ export async function POST(request: Request) {
     );
   }
 
-  const { fullName, email, guestCount, messageForBaby, dietaryRestrictions, allowPublicMessage } =
+  const { fullName, email, willAttend, guestCount, messageForBaby, dietaryRestrictions, allowPublicMessage } =
     parsed.data;
 
   const supabase = createClient();
 
-  // Le formulaire ne demande plus "serez-vous présent·e ?" : le remplir vaut
-  // confirmation. L'administrateur peut toujours corriger manuellement une
-  // présence depuis /admin si quelqu'un se désiste après coup.
+  // Le nombre de personnes et les allergies n'ont de sens que si on assiste :
+  // on les ignore côté serveur en cas de refus, peu importe ce que le
+  // formulaire a envoyé (défense en profondeur, pas seulement côté client).
   const { error } = await supabase.from("rsvp_responses").insert({
     full_name: fullName,
     email,
-    guest_count: guestCount,
-    will_attend: true,
+    guest_count: willAttend ? guestCount! : 0,
+    will_attend: willAttend,
     message_for_baby: messageForBaby || null,
-    dietary_restrictions: dietaryRestrictions || null,
+    dietary_restrictions: willAttend ? dietaryRestrictions || null : null,
     allow_public_message: allowPublicMessage ?? false,
   });
 

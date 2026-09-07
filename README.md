@@ -71,7 +71,11 @@ npm run dev
   [`app/globals.css`](./app/globals.css) et couleurs `sage.*` dans
   [`tailwind.config.ts`](./tailwind.config.ts).
 - **Champs du formulaire** : [`lib/validations/rsvp.ts`](./lib/validations/rsvp.ts) (schéma Zod)
-  et [`components/rsvp-form.tsx`](./components/rsvp-form.tsx).
+  et [`components/rsvp-form.tsx`](./components/rsvp-form.tsx). Le formulaire demande d'abord
+  « Serez-vous présent·e ? » ; un refus n'affiche plus le nombre de personnes ni les allergies,
+  mais garde le message pour bébé. **Si ta table `rsvp_responses` existe déjà** (créée avant cet
+  ajout), exécute une fois la mise à jour de contrainte notée dans [`schema.sql`](./schema.sql)
+  juste après `get_public_baby_messages` — sinon un refus échouera silencieusement en base.
 - **Lien du registre Amazon** : `amazonRegistryUrl` dans [`lib/site-config.ts`](./lib/site-config.ts).
 
 ## Registre de cadeaux personnalisé

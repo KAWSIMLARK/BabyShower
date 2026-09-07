@@ -10,7 +10,8 @@ create table if not exists public.rsvp_responses (
   created_at timestamptz not null default now(),
   full_name text not null,
   email text not null,
-  guest_count integer not null check (guest_count >= 1 and guest_count <= 5),
+  -- 0 = réponse "je ne pourrai pas être présent·e" (guest_count n'a alors pas de sens)
+  guest_count integer not null check (guest_count >= 0 and guest_count <= 5),
   will_attend boolean not null,
   message_for_baby text,
   dietary_restrictions text,
@@ -80,6 +81,16 @@ as $$
 $$;
 
 grant execute on function public.get_public_baby_messages() to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Mise à jour — réponse "je ne pourrai pas être présent·e"
+-- ---------------------------------------------------------------------------
+-- Si ta table rsvp_responses existe déjà (créée avant cet ajout), la
+-- contrainte guest_count exigeait au moins 1 personne. Exécute cette ligne
+-- une seule fois pour permettre 0 (utilisé pour un refus) :
+--
+-- alter table public.rsvp_responses drop constraint rsvp_responses_guest_count_check;
+-- alter table public.rsvp_responses add check (guest_count >= 0 and guest_count <= 5);
 
 -- =============================================================================
 -- Registre de cadeaux personnalisé (géré depuis /admin, affiché sur /registre)

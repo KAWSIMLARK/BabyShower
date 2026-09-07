@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -21,11 +22,13 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function RsvpForm() {
   const [isSuccess, setIsSuccess] = useState(false);
+  const [attendedOnSuccess, setAttendedOnSuccess] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<RsvpFormValues>({
     resolver: zodResolver(rsvpSchema),
     defaultValues: {
+      willAttend: true,
       fullName: "",
       email: "",
       guestCount: 1,
@@ -36,6 +39,7 @@ export function RsvpForm() {
   });
 
   const messageValue = form.watch("messageForBaby") ?? "";
+  const willAttend = form.watch("willAttend");
 
   async function onSubmit(values: RsvpFormValues) {
     setServerError(null);
@@ -53,6 +57,7 @@ export function RsvpForm() {
         return;
       }
 
+      setAttendedOnSuccess(values.willAttend);
       setIsSuccess(true);
     } catch {
       setServerError("Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.");
@@ -64,9 +69,13 @@ export function RsvpForm() {
       <Card className="border-primary/20 bg-primary/5 text-center animate-fade-up">
         <CardContent className="flex flex-col items-center gap-4 p-10">
           <PartyPopper className="h-12 w-12 text-primary" />
-          <h2 className="font-display text-2xl font-semibold">Merci pour votre réponse !</h2>
+          <h2 className="font-display text-2xl font-semibold">
+            {attendedOnSuccess ? "Merci pour votre réponse !" : "Merci de nous l'avoir dit !"}
+          </h2>
           <p className="max-w-sm text-muted-foreground">
-            Votre confirmation a bien été enregistrée. On a très hâte de célébrer avec vous !
+            {attendedOnSuccess
+              ? "Votre confirmation a bien été enregistrée. On a très hâte de célébrer avec vous !"
+              : "Votre réponse a bien été enregistrée. On pensera fort à vous ce jour-là !"}
           </p>
         </CardContent>
       </Card>
@@ -75,6 +84,33 @@ export function RsvpForm() {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <div className="grid gap-3">
+        <Label id="willAttend-label">Serez-vous présent·e ? *</Label>
+        <RadioGroup
+          aria-labelledby="willAttend-label"
+          value={willAttend ? "oui" : "non"}
+          onValueChange={(value) => form.setValue("willAttend", value === "oui")}
+          className="grid gap-3 sm:grid-cols-2"
+        >
+          <label
+            className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 text-sm transition-colors ${
+              willAttend ? "border-primary bg-primary/5" : "border-input"
+            }`}
+          >
+            <RadioGroupItem value="oui" id="willAttend-oui" />
+            Oui, je serai présent·e
+          </label>
+          <label
+            className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 text-sm transition-colors ${
+              !willAttend ? "border-primary bg-primary/5" : "border-input"
+            }`}
+          >
+            <RadioGroupItem value="non" id="willAttend-non" />
+            Non, je ne pourrai pas être présent·e
+          </label>
+        </RadioGroup>
+      </div>
+
       <div className="grid gap-2">
         <Label htmlFor="fullName">Nom complet *</Label>
         <Input
@@ -104,27 +140,29 @@ export function RsvpForm() {
         )}
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="guestCount">Nombre de personnes (vous inclus·e) *</Label>
-        <Select
-          defaultValue="1"
-          onValueChange={(value) => form.setValue("guestCount", Number(value), { shouldValidate: true })}
-        >
-          <SelectTrigger id="guestCount">
-            <SelectValue placeholder="Sélectionnez" />
-          </SelectTrigger>
-          <SelectContent>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <SelectItem key={n} value={String(n)}>
-                {n} {n === 1 ? "personne" : "personnes"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {form.formState.errors.guestCount && (
-          <p className="text-sm text-destructive">{form.formState.errors.guestCount.message}</p>
-        )}
-      </div>
+      {willAttend && (
+        <div className="grid gap-2">
+          <Label htmlFor="guestCount">Nombre de personnes (vous inclus·e) *</Label>
+          <Select
+            defaultValue="1"
+            onValueChange={(value) => form.setValue("guestCount", Number(value), { shouldValidate: true })}
+          >
+            <SelectTrigger id="guestCount" aria-invalid={!!form.formState.errors.guestCount}>
+              <SelectValue placeholder="Sélectionnez" />
+            </SelectTrigger>
+            <SelectContent>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n} {n === 1 ? "personne" : "personnes"}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {form.formState.errors.guestCount && (
+            <p className="text-sm text-destructive">{form.formState.errors.guestCount.message}</p>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-2">
         <div className="flex items-baseline justify-between">
@@ -144,14 +182,18 @@ export function RsvpForm() {
         )}
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="dietaryRestrictions">Allergies ou restrictions alimentaires (optionnel)</Label>
-        <Input
-          id="dietaryRestrictions"
-          placeholder="Ex : végétarien, allergie aux arachides..."
-          {...form.register("dietaryRestrictions")}
-        />
-      </div>
+      {willAttend && (
+        <div className="grid gap-2">
+          <Label htmlFor="dietaryRestrictions">
+            Allergies ou restrictions alimentaires (optionnel)
+          </Label>
+          <Input
+            id="dietaryRestrictions"
+            placeholder="Ex : végétarien, allergie aux arachides..."
+            {...form.register("dietaryRestrictions")}
+          />
+        </div>
+      )}
 
       <label className="flex items-start gap-3 rounded-xl bg-muted/60 p-4 text-sm">
         <Checkbox
@@ -177,7 +219,8 @@ export function RsvpForm() {
           </>
         ) : (
           <>
-            <CheckCircle2 className="h-4 w-4" /> Confirmer ma présence
+            <CheckCircle2 className="h-4 w-4" />{" "}
+            {willAttend ? "Confirmer ma présence" : "Envoyer ma réponse"}
           </>
         )}
       </Button>
