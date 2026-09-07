@@ -16,7 +16,9 @@ const fontSans = Nunito({
   weight: ["400", "600", "700"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+// `||` (et non `??`) : une variable d'environnement définie mais vide sur Vercel
+// doit aussi retomber sur la valeur par défaut, sinon `new URL("")` plante le build.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
