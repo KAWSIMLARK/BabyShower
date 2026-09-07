@@ -17,10 +17,10 @@ export const dynamic = "force-dynamic";
 export default function HomePage() {
   return (
     <main className="relative overflow-hidden bg-background">
-      <LeafBranch className="pointer-events-none absolute -left-6 top-0 h-72 w-40 text-sage-300/60" />
-      <LeafBranch className="pointer-events-none absolute -right-4 top-24 h-64 w-36 rotate-[20deg] text-sage-300/40" />
-      <DotCluster className="pointer-events-none absolute right-10 top-6 h-24 w-24 text-sage-400" />
-      <HotAirBalloon className="pointer-events-none absolute left-12 top-40 h-20 w-14 text-sage-500/50" />
+      <LeafBranch className="pointer-events-none absolute -left-6 top-0 hidden h-72 w-40 text-sage-300/60 sm:block" />
+      <LeafBranch className="pointer-events-none absolute -right-4 top-24 hidden h-64 w-36 rotate-[20deg] text-sage-300/40 sm:block" />
+      <DotCluster className="pointer-events-none absolute right-10 top-6 hidden h-24 w-24 text-sage-400 sm:block" />
+      <HotAirBalloon className="pointer-events-none absolute left-12 top-40 hidden h-20 w-14 text-sage-500/50 sm:block" />
 
       <section className="relative mx-auto flex max-w-3xl flex-col items-center px-6 pb-10 pt-20 text-center sm:pt-28">
         <span className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground">
