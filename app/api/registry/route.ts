@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 // Liste publique des cadeaux encore disponibles (les cadeaux achetés disparaissent)
 export async function GET() {
   const supabase = createClient();

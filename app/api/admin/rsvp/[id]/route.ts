@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 // Permet à l'administrateur de corriger manuellement une présence
 // (protégé par le middleware, voir lib/supabase/middleware.ts)
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {

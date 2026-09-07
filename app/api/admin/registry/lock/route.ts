@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
+export const dynamic = "force-dynamic";
+
 type LockBody = { action: "lock" | "unlock"; password?: string };
 
 export async function POST(request: Request) {

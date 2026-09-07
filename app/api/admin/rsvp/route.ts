@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 // Protégée par le middleware (lib/supabase/middleware.ts) : seuls les
 // utilisateurs authentifiés et présents dans ADMIN_EMAILS atteignent ce code.
 export async function GET() {

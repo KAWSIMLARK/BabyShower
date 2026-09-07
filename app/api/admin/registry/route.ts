@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 // Protégée par le middleware : seul l'administrateur authentifié atteint ce code.
 export async function GET() {
   const supabase = createClient();

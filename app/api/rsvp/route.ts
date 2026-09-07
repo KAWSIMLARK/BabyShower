@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { rsvpSchema } from "@/lib/validations/rsvp";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
