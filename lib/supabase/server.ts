@@ -5,11 +5,22 @@ type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 // Client Supabase pour les Server Components, Route Handlers et Server Actions
 export function createClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "Configuration Supabase manquante : NEXT_PUBLIC_SUPABASE_URL et/ou NEXT_PUBLIC_SUPABASE_ANON_KEY " +
+        "ne sont pas définies (ou sont vides) dans les variables d'environnement. " +
+        "Vérifie Project Settings > Environment Variables sur Vercel pour l'environnement Production.",
+    );
+  }
+
   const cookieStore = cookies();
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
