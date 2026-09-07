@@ -8,10 +8,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function AdminLoginPage() {
+const MAGIC_LINK_ERRORS: Record<string, string> = {
+  lien_invalide:
+    "Ce lien de connexion est invalide ou a expiré. Demandez un nouveau lien ci-dessous.",
+};
+
+export default function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams?: { erreur?: string };
+}) {
+  const linkError = searchParams?.erreur ? MAGIC_LINK_ERRORS[searchParams.erreur] : undefined;
+
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">(
+    linkError ? "error" : "idle",
+  );
+  const [errorMessage, setErrorMessage] = useState(linkError ?? "");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
