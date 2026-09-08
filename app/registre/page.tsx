@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { GiftRegistryList, type PublicGiftItem } from "@/components/gift-registry-list";
 import { siteConfig } from "@/lib/site-config";
+import { Elephant, AcaciaTree, DotCluster } from "@/components/safari-accents";
 
 export const metadata: Metadata = {
   title: `Registre de cadeaux — ${siteConfig.title}`,
@@ -27,8 +28,12 @@ export default async function RegistryPage() {
   const items = (data ?? []) as PublicGiftItem[];
 
   return (
-    <main className="min-h-screen bg-secondary/30 px-6 py-16">
-      <div className="mx-auto max-w-3xl">
+    <main className="safari-toile-bg relative min-h-screen overflow-hidden px-6 py-16">
+      <AcaciaTree className="pointer-events-none absolute -left-10 top-0 hidden h-64 w-52 text-sage-300/40 lg:block" />
+      <Elephant className="pointer-events-none absolute -right-8 bottom-4 hidden h-32 w-40 text-sage-400/40 lg:block" />
+      <DotCluster className="pointer-events-none absolute right-16 top-6 hidden h-20 w-20 text-sage-400 md:block" />
+
+      <div className="relative mx-auto max-w-3xl">
         <Link
           href="/"
           className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"

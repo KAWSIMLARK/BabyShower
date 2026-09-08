@@ -9,6 +9,8 @@ import {
   HotAirBalloon,
   Giraffe,
   Elephant,
+  AcaciaTree,
+  BirdFlock,
 } from "@/components/safari-accents";
 import { BabyMessages } from "@/components/baby-messages";
 
@@ -16,11 +18,13 @@ export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return (
-    <main className="relative overflow-hidden bg-background">
+    <main className="safari-toile-bg relative overflow-hidden">
       <LeafBranch className="pointer-events-none absolute -left-6 top-0 hidden h-72 w-40 text-sage-300/60 sm:block" />
       <LeafBranch className="pointer-events-none absolute -right-4 top-24 hidden h-64 w-36 rotate-[20deg] text-sage-300/40 sm:block" />
       <DotCluster className="pointer-events-none absolute right-10 top-6 hidden h-24 w-24 text-sage-400 sm:block" />
       <HotAirBalloon className="pointer-events-none absolute left-12 top-40 hidden h-20 w-14 text-sage-500/50 sm:block" />
+      <AcaciaTree className="pointer-events-none absolute -right-8 top-0 hidden h-64 w-52 text-sage-400/40 lg:block" />
+      <BirdFlock className="pointer-events-none absolute left-1/3 top-10 hidden h-10 w-28 text-sage-500/50 sm:block" />
 
       <section className="relative mx-auto flex max-w-3xl flex-col items-center px-6 pb-10 pt-20 text-center sm:pt-28">
         <span className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground">
@@ -66,26 +70,27 @@ export default function HomePage() {
         </a>
 
         <Button asChild size="lg" className="mt-10">
-          <Link href="/rsvp">Confirmer ma présence</Link>
+          <Link href="/rsvp">Répondre à l&apos;invitation</Link>
         </Button>
       </section>
 
       <section className="relative mx-auto max-w-2xl px-6 pb-16 text-center">
         <Giraffe className="pointer-events-none absolute -left-2 bottom-0 hidden h-56 w-28 text-sage-400/50 sm:block" />
         <Elephant className="pointer-events-none absolute -right-6 bottom-8 hidden h-28 w-36 text-sage-400/45 sm:block" />
+        <HotAirBalloon className="pointer-events-none absolute right-4 top-0 hidden h-16 w-11 text-sage-500/45 md:block" />
         <h2 className="font-display text-2xl font-semibold">Envie de gâter bébé ?</h2>
         <p className="mx-auto mt-2 max-w-md text-muted-foreground">
           Voici deux façons de choisir un cadeau — aucune obligation, votre présence est déjà
           le plus beau des cadeaux.
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Button asChild variant="outline" size="lg">
+          <Button asChild size="lg">
             <a href={siteConfig.amazonRegistryUrl} target="_blank" rel="noopener noreferrer">
               <Gift className="h-4 w-4" /> Registre pour bébé
               <ExternalLink className="h-3.5 w-3.5 opacity-60" />
             </a>
           </Button>
-          <Button asChild size="lg">
+          <Button asChild variant="outline" size="lg">
             <Link href="/registre">
               <Gift className="h-4 w-4" /> Registre de cadeaux spéciaux
             </Link>
