@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, MapPin, PartyPopper, Gift, ExternalLink } from "lucide-react";
+import { CalendarDays, MapPin, PartyPopper, Gift, ExternalLink, BookOpen } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import {
   AcaciaTree,
   BirdFlock,
 } from "@/components/safari-accents";
+import { SealBadge } from "@/components/seal-badge";
 import { BabyMessages } from "@/components/baby-messages";
 
 export const dynamic = "force-dynamic";
@@ -72,6 +73,20 @@ export default function HomePage() {
         <Button asChild size="lg" className="mt-10">
           <Link href="/rsvp">Répondre à l&apos;invitation</Link>
         </Button>
+      </section>
+
+      <section className="relative mx-auto flex max-w-xl flex-col items-center px-6 pb-14 text-center">
+        <SealBadge className="relative h-64 w-64 shrink-0 sm:h-72 sm:w-72">
+          <BookOpen className="h-7 w-7" />
+          <p className="font-display text-base font-semibold leading-snug sm:text-lg">
+            Notre petite tradition
+          </p>
+          <p className="text-sm leading-snug sm:text-[0.95rem]">
+            Plutôt qu&apos;une carte, apportez un petit livre pour enfant et écrivez-y un
+            message pour bébé — un trésor qu&apos;il pourra lire, page après page, en
+            grandissant.
+          </p>
+        </SealBadge>
       </section>
 
       <section className="relative mx-auto max-w-2xl px-6 pb-16 text-center">
