@@ -40,10 +40,7 @@ export default function HomePage() {
           {siteConfig.heroSubheading}
         </p>
 
-        <div className="relative mt-10 grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <ArrowDoodleUpRight className="pointer-events-none absolute -left-14 -top-10 hidden h-20 w-20 -rotate-6 text-sage-500/70 lg:block" />
-          <ArrowDoodleDownLeft className="pointer-events-none absolute -right-10 -bottom-14 hidden h-20 w-20 rotate-6 text-sage-500/70 lg:block" />
-
+        <div className="mt-10 grid w-full gap-4 sm:grid-cols-2">
           <Card className="bg-white/70">
             <CardContent className="flex items-center gap-4 p-5 text-left">
               <CalendarDays className="h-8 w-8 shrink-0 text-primary" />
@@ -62,7 +59,13 @@ export default function HomePage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-none bg-primary text-primary-foreground sm:col-span-2 lg:col-span-1">
+        </div>
+
+        <div className="relative mt-4 w-full">
+          <ArrowDoodleUpRight className="pointer-events-none absolute -left-14 -top-8 hidden h-20 w-20 -rotate-6 text-sage-500/70 lg:block" />
+          <ArrowDoodleDownLeft className="pointer-events-none absolute -right-10 -bottom-10 hidden h-20 w-20 rotate-6 text-sage-500/70 lg:block" />
+
+          <Card className="border-none bg-primary text-primary-foreground">
             <CardContent className="flex items-center gap-4 p-5 text-left">
               <BookOpen className="h-8 w-8 shrink-0" />
               <div>
