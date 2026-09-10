@@ -27,6 +27,21 @@ export default function HomePage() {
       <AcaciaTree className="pointer-events-none absolute -right-8 top-0 hidden h-64 w-52 text-sage-400/40 lg:block" />
       <BirdFlock className="pointer-events-none absolute left-1/3 top-10 hidden h-10 w-28 text-sage-500/50 sm:block" />
 
+      {/* Sceau flottant façon enveloppe, ancré à la page (pas au bloc de contenu) pour
+          ne jamais chevaucher le texte — visible seulement à partir de xl, là où la
+          marge est assez large pour l'accueillir sans toucher le contenu (voir la
+          version en flux normal plus bas pour les écrans plus étroits). */}
+      <SealBadge className="pointer-events-none absolute left-10 top-24 hidden h-44 w-44 -rotate-6 xl:block">
+        <BookOpen className="h-5 w-5" />
+        <p className="font-display text-sm font-semibold leading-snug">
+          Notre petite demande spéciale
+        </p>
+        <p className="text-xs leading-snug">
+          Plutôt qu&apos;une carte, apportez un livre pour enfant et écrivez-y un mot
+          pour bébé.
+        </p>
+      </SealBadge>
+
       <section className="relative mx-auto flex max-w-3xl flex-col items-center px-6 pb-10 pt-20 text-center sm:pt-28">
         <span className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground">
           <PartyPopper className="h-4 w-4" /> Vous êtes invité·e
@@ -75,16 +90,15 @@ export default function HomePage() {
         </Button>
       </section>
 
-      <section className="relative mx-auto flex max-w-xl flex-col items-center px-6 pb-14 text-center">
+      <section className="relative mx-auto flex max-w-xl flex-col items-center px-6 pb-14 text-center xl:hidden">
         <SealBadge className="relative h-64 w-64 shrink-0 sm:h-72 sm:w-72">
           <BookOpen className="h-7 w-7" />
           <p className="font-display text-base font-semibold leading-snug sm:text-lg">
-            Notre petite tradition
+            Notre petite demande spéciale
           </p>
           <p className="text-sm leading-snug sm:text-[0.95rem]">
             Plutôt qu&apos;une carte, apportez un petit livre pour enfant et écrivez-y un
-            message pour bébé — un trésor qu&apos;il pourra lire, page après page, en
-            grandissant.
+            mot pour bébé — un trésor à lire en grandissant.
           </p>
         </SealBadge>
       </section>
