@@ -12,7 +12,6 @@ import {
   AcaciaTree,
   BirdFlock,
 } from "@/components/safari-accents";
-import { ArrowDoodleDownLeft, ArrowDoodleUpRight } from "@/components/arrow-doodle";
 import { BabyMessages } from "@/components/baby-messages";
 
 export const dynamic = "force-dynamic";
@@ -61,10 +60,7 @@ export default function HomePage() {
           </Card>
         </div>
 
-        <div className="relative mt-4 w-full">
-          <ArrowDoodleUpRight className="pointer-events-none absolute -left-14 -top-8 hidden h-20 w-20 -rotate-6 text-sage-500/70 lg:block" />
-          <ArrowDoodleDownLeft className="pointer-events-none absolute -right-10 -bottom-10 hidden h-20 w-20 rotate-6 text-sage-500/70 lg:block" />
-
+        <div className="mt-4 w-full">
           <Card className="border-none bg-primary text-primary-foreground">
             <CardContent className="flex items-center gap-4 p-5 text-left">
               <BookOpen className="h-8 w-8 shrink-0" />
