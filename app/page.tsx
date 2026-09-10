@@ -62,15 +62,13 @@ export default function HomePage() {
 
         <div className="mt-4 w-full">
           <Card className="border-none bg-primary text-primary-foreground">
-            <CardContent className="flex items-center gap-4 p-5 text-left">
-              <BookOpen className="h-8 w-8 shrink-0" />
-              <div>
-                <p className="font-semibold">Notre petite demande spéciale</p>
-                <p className="text-sm text-primary-foreground/85">
-                  Plutôt qu&apos;une carte, apportez un petit livre pour enfant et
-                  écrivez-y un mot pour bébé — un trésor à lire en grandissant.
-                </p>
-              </div>
+            <CardContent className="flex flex-col items-center gap-2 p-5 text-center">
+              <BookOpen className="h-8 w-8" />
+              <p className="font-display text-lg font-bold">Notre petite demande spéciale</p>
+              <p className="text-sm text-primary-foreground/85">
+                Plutôt qu&apos;une carte, apportez un petit livre pour enfant et écrivez-y
+                un mot pour bébé — un trésor à lire en grandissant.
+              </p>
             </CardContent>
           </Card>
         </div>
