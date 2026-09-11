@@ -39,7 +39,22 @@ export default function HomePage() {
           {siteConfig.heroSubheading}
         </p>
 
-        <div className="mt-10 grid w-full gap-4 sm:grid-cols-2">
+        <div className="mt-8 w-full">
+          <Card className="border-none bg-primary text-primary-foreground shadow-xl ring-4 ring-primary/15">
+            <CardContent className="flex flex-col items-center gap-3 p-7 text-center sm:p-9">
+              <BookOpen className="h-11 w-11 sm:h-12 sm:w-12" />
+              <p className="font-display text-2xl font-bold sm:text-3xl">
+                Notre petite demande spéciale
+              </p>
+              <p className="max-w-md text-base text-primary-foreground/90 sm:text-lg">
+                Plutôt qu&apos;une carte, apportez un petit livre pour enfant et écrivez-y
+                un mot pour bébé — un trésor à lire en grandissant.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8 grid w-full gap-4 sm:grid-cols-2">
           <Card className="bg-white/70">
             <CardContent className="flex items-center gap-4 p-5 text-left">
               <CalendarDays className="h-8 w-8 shrink-0 text-primary" />
@@ -56,19 +71,6 @@ export default function HomePage() {
                 <p className="font-semibold">{siteConfig.location.name}</p>
                 <p className="text-sm text-muted-foreground">{siteConfig.location.city}</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-4 w-full">
-          <Card className="border-none bg-primary text-primary-foreground">
-            <CardContent className="flex flex-col items-center gap-2 p-5 text-center">
-              <BookOpen className="h-8 w-8" />
-              <p className="font-display text-lg font-bold">Notre petite demande spéciale</p>
-              <p className="text-sm text-primary-foreground/85">
-                Plutôt qu&apos;une carte, apportez un petit livre pour enfant et écrivez-y
-                un mot pour bébé — un trésor à lire en grandissant.
-              </p>
             </CardContent>
           </Card>
         </div>
