@@ -30,7 +30,7 @@ create policy "Tout le monde peut soumettre un RSVP"
   to anon, authenticated
   with check (true);
 
--- Seuls les utilisateurs authentifiés (l'administrateur connecté via magic link)
+-- Seuls les utilisateurs authentifiés (l'administrateur connecté par mot de passe)
 -- peuvent lire l'ensemble des réponses. Le filtrage par courriel autorisé
 -- (ADMIN_EMAILS) est appliqué en plus au niveau de l'application (middleware).
 create policy "Seuls les utilisateurs authentifiés peuvent lire les RSVP"
@@ -186,13 +186,13 @@ create policy "Seuls les utilisateurs authentifiés peuvent gérer le verrou"
 -- ---------------------------------------------------------------------------
 -- IMPORTANT — Création du compte administrateur
 -- ---------------------------------------------------------------------------
--- Le formulaire de connexion /admin/login utilise un "magic link" (OTP) avec
--- shouldCreateUser: false : il n'est PAS possible de créer un compte depuis
--- le site public. Tu dois créer ton compte admin manuellement, une seule fois :
+-- Le formulaire de connexion /admin/login utilise un mot de passe classique :
+-- il n'est PAS possible de créer un compte depuis le site public. Tu dois
+-- créer ton compte admin manuellement, une seule fois :
 --
 -- Dashboard Supabase > Authentication > Users > Add user > Create new user
 --   - Email : la même adresse que dans la variable ADMIN_EMAILS (.env)
+--   - Password : le mot de passe que tu utiliseras pour te connecter
 --   - Auto Confirm User : coché
 --
--- Ensuite, connecte-toi sur /admin/login avec cette adresse pour recevoir
--- ton lien magique.
+-- Ensuite, connecte-toi sur /admin/login avec ce courriel et ce mot de passe.

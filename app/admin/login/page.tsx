@@ -1,54 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Loader2, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Lock, Loader2, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const MAGIC_LINK_ERRORS: Record<string, string> = {
-  lien_invalide:
-    "Ce lien de connexion est invalide ou a expiré. Demandez un nouveau lien ci-dessous.",
-};
-
-export default function AdminLoginPage({
-  searchParams,
-}: {
-  searchParams?: { erreur?: string };
-}) {
-  const linkError = searchParams?.erreur ? MAGIC_LINK_ERRORS[searchParams.erreur] : undefined;
-
+export default function AdminLoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">(
-    linkError ? "error" : "idle",
-  );
-  const [errorMessage, setErrorMessage] = useState(linkError ?? "");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setStatus("loading");
+    setLoading(true);
     setErrorMessage("");
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setStatus("error");
-      setErrorMessage(
-        "Impossible d'envoyer le lien. Vérifiez que ce compte administrateur existe bien dans Supabase.",
-      );
+      setLoading(false);
+      setErrorMessage("Courriel ou mot de passe incorrect.");
       return;
     }
 
-    setStatus("sent");
+    router.push("/admin");
+    router.refresh();
   }
 
   return (
@@ -57,46 +40,46 @@ export default function AdminLoginPage({
         <CardHeader className="items-center text-center">
           <ShieldCheck className="mb-2 h-10 w-10 text-primary" />
           <CardTitle>Accès administrateur</CardTitle>
-          <CardDescription>
-            Entrez votre courriel pour recevoir un lien de connexion sécurisé.
-          </CardDescription>
+          <CardDescription>Connecte-toi avec ton courriel et ton mot de passe.</CardDescription>
         </CardHeader>
         <CardContent>
-          {status === "sent" ? (
-            <div className="rounded-xl bg-primary/10 p-4 text-center text-sm text-primary">
-              Un lien de connexion a été envoyé à <strong>{email}</strong>. Consultez votre
-              boîte de réception.
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-2 text-left">
+              <Label htmlFor="admin-email">Courriel</Label>
+              <Input
+                id="admin-email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="admin@exemple.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-2 text-left">
-                <Label htmlFor="admin-email">Courriel</Label>
-                <Input
-                  id="admin-email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  placeholder="admin@exemple.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              {status === "error" && (
-                <p className="text-sm text-destructive">{errorMessage}</p>
+            <div className="grid gap-2 text-left">
+              <Label htmlFor="admin-password">Mot de passe</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            {errorMessage && <p className="text-sm text-destructive">{errorMessage}</p>}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Connexion...
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" /> Se connecter
+                </>
               )}
-              <Button type="submit" className="w-full" disabled={status === "loading"}>
-                {status === "loading" ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Envoi...
-                  </>
-                ) : (
-                  <>
-                    <Mail className="h-4 w-4" /> Recevoir le lien magique
-                  </>
-                )}
-              </Button>
-            </form>
-          )}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </main>

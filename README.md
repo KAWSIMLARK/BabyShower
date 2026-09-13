@@ -7,7 +7,7 @@ et les messages de bienvenue pour le baby shower du **28 novembre 2026**, au
 ## Stack
 
 - Next.js 14 (App Router) + TypeScript
-- Supabase (PostgreSQL + Auth par magic link)
+- Supabase (PostgreSQL + Auth par courriel/mot de passe)
 - Tailwind CSS + composants façon shadcn/ui (Radix UI)
 - React Hook Form + Zod
 - Déploiement recommandé : Vercel
@@ -35,10 +35,8 @@ Remplis `.env.local` avec :
    table `rsvp_responses` et les politiques RLS (insertion publique, lecture/modification
    réservées aux comptes authentifiés).
 3. Crée ton compte administrateur manuellement (aucune inscription publique n'est possible) :
-   **Authentication > Users > Add user**, avec ton courriel (le même que dans `ADMIN_EMAILS`)
-   et **Auto Confirm User** coché.
-4. Dans **Authentication > URL Configuration**, ajoute l'URL de callback :
-   `https://TON-DOMAINE/auth/callback` (et `http://localhost:3000/auth/callback` pour le dev).
+   **Authentication > Users > Add user**, avec ton courriel (le même que dans `ADMIN_EMAILS`),
+   un mot de passe de ton choix, et **Auto Confirm User** coché.
 
 ## 3. Lancer le projet
 
@@ -61,8 +59,8 @@ npm run dev
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_SITE_URL` (l'URL finale, ex. `https://baby-shower-lafreniere.vercel.app`)
    - `ADMIN_EMAILS`
-4. Déploie. Une fois le domaine final connu, mets à jour `NEXT_PUBLIC_SITE_URL` et l'URL de
-   callback Supabase (étape 2.4) avec le vrai domaine, puis redéploie.
+4. Déploie. Une fois le domaine final connu, mets à jour `NEXT_PUBLIC_SITE_URL` avec le vrai
+   domaine, puis redéploie.
 
 ## Personnalisation
 
@@ -108,8 +106,7 @@ app/
   rsvp/page.tsx                Formulaire RSVP
   registre/page.tsx             Registre de cadeaux spéciaux (public)
   admin/page.tsx                Tableau de bord (protégé)
-  admin/login/page.tsx           Connexion par magic link
-  auth/callback/route.ts         Échange du code du magic link
+  admin/login/page.tsx           Connexion par courriel/mot de passe
   api/rsvp/route.ts             POST — soumission d'un RSVP
   api/registry/route.ts          GET — cadeaux disponibles (public)
   api/registry/[id]/purchase/route.ts  POST — marquer un cadeau acheté (public)
@@ -139,9 +136,8 @@ middleware.ts                    Protection des routes /admin et /api/admin
 
 - La table `rsvp_responses` a la RLS activée : tout le monde peut insérer une réponse,
   mais seuls les comptes authentifiés peuvent lire ou modifier.
-- La connexion admin se fait uniquement par **magic link**, sans création de compte
-  possible depuis le site (`shouldCreateUser: false`) — le compte doit être créé à
-  l'avance dans Supabase.
+- La connexion admin se fait par **courriel et mot de passe**, sans création de compte
+  possible depuis le site — le compte doit être créé à l'avance dans Supabase.
 - Le middleware (`middleware.ts` / `lib/supabase/middleware.ts`) vérifie en plus que le
   courriel connecté figure dans `ADMIN_EMAILS` avant de laisser passer vers `/admin` ou
   `/api/admin/*`.
