@@ -48,9 +48,13 @@ export default async function AdminPage() {
         </header>
 
         {rsvpError ? (
-          <p className="rounded-xl bg-destructive/10 p-4 text-destructive">
-            Impossible de charger les réponses : {rsvpError.message}
-          </p>
+          <div className="rounded-xl bg-destructive/10 p-4 text-destructive">
+            <p>
+              Impossible de charger les réponses ({rsvpError.message}). Rafraîchis la page —
+              si ça persiste, déconnecte-toi puis reconnecte-toi.
+            </p>
+            <LogoutButton />
+          </div>
         ) : (
           <AdminRsvpTable initialData={responses} />
         )}
