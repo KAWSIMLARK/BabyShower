@@ -19,7 +19,15 @@ const priceFormatter = new Intl.NumberFormat("fr-CA", {
   maximumFractionDigits: 0,
 });
 
-export function GiftRegistryList({ initialItems }: { initialItems: PublicGiftItem[] }) {
+export function GiftRegistryList({
+  initialItems,
+  emptyTitle = "Aucun cadeau disponible pour le moment",
+  emptyMessage = "Soit tout a déjà trouvé preneur, soit la liste n'est pas encore prête — consultez aussi le registre Amazon depuis la page d'accueil.",
+}: {
+  initialItems: PublicGiftItem[];
+  emptyTitle?: string;
+  emptyMessage?: string;
+}) {
   const [items, setItems] = useState(initialItems);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
   const [confirmedMessage, setConfirmedMessage] = useState<string | null>(null);
@@ -54,11 +62,8 @@ export function GiftRegistryList({ initialItems }: { initialItems: PublicGiftIte
       <Card className="mx-auto max-w-md bg-white/70 text-center">
         <CardContent className="flex flex-col items-center gap-3 p-10">
           <GiftIcon className="h-10 w-10 text-primary" />
-          <p className="font-semibold">Aucun cadeau disponible pour le moment</p>
-          <p className="text-sm text-muted-foreground">
-            Soit tout a déjà trouvé preneur, soit la liste n&apos;est pas encore prête —
-            consultez aussi le registre Amazon depuis la page d&apos;accueil.
-          </p>
+          <p className="font-semibold">{emptyTitle}</p>
+          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
         </CardContent>
       </Card>
     );

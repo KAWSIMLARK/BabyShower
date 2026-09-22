@@ -4,8 +4,15 @@ import { resolveIsLocked } from "@/lib/registry-lock";
 
 export const dynamic = "force-dynamic";
 
+type Category = "cadeau" | "livre";
+
+function parseCategory(value: string | null): Category {
+  return value === "livre" ? "livre" : "cadeau";
+}
+
 // Protégée par le middleware : seul l'administrateur authentifié atteint ce code.
-export async function GET() {
+export async function GET(request: Request) {
+  const category = parseCategory(new URL(request.url).searchParams.get("category"));
   const supabase = createClient();
 
   const [
@@ -16,6 +23,7 @@ export async function GET() {
     supabase
       .from("gift_items")
       .select("*")
+      .eq("category", category)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
   ]);
@@ -40,7 +48,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  let body: { name?: string; description?: string; price?: number | null; linkUrl?: string };
+  let body: {
+    name?: string;
+    description?: string;
+    price?: number | null;
+    linkUrl?: string;
+    category?: string;
+  };
   try {
     body = await request.json();
   } catch {
@@ -49,12 +63,14 @@ export async function POST(request: Request) {
 
   const name = body.name?.trim();
   if (!name) {
-    return NextResponse.json({ message: "Le nom du cadeau est requis." }, { status: 400 });
+    return NextResponse.json({ message: "Le nom est requis." }, { status: 400 });
   }
 
   if (body.price != null && (!Number.isFinite(body.price) || body.price < 0)) {
     return NextResponse.json({ message: "Le prix doit être un nombre positif." }, { status: 400 });
   }
+
+  const category = parseCategory(body.category ?? null);
 
   const supabase = createClient();
   const { error } = await supabase.from("gift_items").insert({
@@ -62,12 +78,13 @@ export async function POST(request: Request) {
     description: body.description?.trim() || null,
     price: body.price ?? null,
     link_url: body.linkUrl?.trim() || null,
+    category,
   });
 
   if (error) {
-    console.error("Erreur lors de l'ajout du cadeau :", error);
-    return NextResponse.json({ message: "Impossible d'ajouter ce cadeau." }, { status: 500 });
+    console.error("Erreur lors de l'ajout de l'article :", error);
+    return NextResponse.json({ message: "Impossible d'ajouter cet article." }, { status: 500 });
   }
 
-  return NextResponse.json({ message: "Cadeau ajouté." }, { status: 201 });
+  return NextResponse.json({ message: "Article ajouté." }, { status: 201 });
 }

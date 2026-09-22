@@ -98,30 +98,48 @@ Ce registre utilise deux tables supplémentaires (`gift_items`, `registry_lock`)
 section correspondante dans [`schema.sql`](./schema.sql), à exécuter dans le même projet
 Supabase que le reste (une seule fois, en plus du schéma déjà en place).
 
+### Idées de livres
+
+Même mécanisme, deuxième liste : sur `/livres`, les invité·es voient des suggestions de livres
+pour enfant (pour y écrire un mot à bébé, voir la mention sur la page d'accueil) et cliquent
+**« Je l'offre »** pour en réserver un. Géré depuis la même section `/admin` que le registre de
+cadeaux, sous **« Idées de livres »** — **un seul cadenas protège les deux listes**, avec le
+même mot de passe.
+
+En interne, `gift_items` a une colonne `category` (`'cadeau'` ou `'livre'`) qui distingue les
+deux listes ; tout le reste (table, verrou, fonction anti-doublon) est partagé.
+**Si ta table `gift_items` existe déjà** (créée avant cet ajout), exécute une fois la migration
+notée dans [`schema.sql`](./schema.sql) juste après la définition de la table — sans ça, `category`
+n'existera pas et `/registre`/`/livres` resteront vides (rien n'est perdu, la colonne se rattrape
+après coup).
+
 ## Structure du projet
 
 ```
 app/
   page.tsx                    Page d'accueil publique
   rsvp/page.tsx                Formulaire RSVP
-  registre/page.tsx             Registre de cadeaux spéciaux (public)
+  registre/page.tsx             Registre de cadeaux spéciaux (public, category='cadeau')
+  livres/page.tsx                Idées de livres (public, category='livre')
   admin/page.tsx                Tableau de bord (protégé)
   admin/login/page.tsx           Connexion par courriel/mot de passe
   api/rsvp/route.ts             POST — soumission d'un RSVP
-  api/registry/route.ts          GET — cadeaux disponibles (public)
-  api/registry/[id]/purchase/route.ts  POST — marquer un cadeau acheté (public)
+  api/registry/route.ts          GET — cadeaux/livres disponibles (public, ?category=)
+  api/registry/[id]/purchase/route.ts  POST — marquer un article acheté (public)
   api/admin/rsvp/route.ts        GET — liste des RSVP (protégé)
   api/admin/rsvp/[id]/route.ts    PATCH/DELETE — correction ou suppression d'un RSVP
-  api/admin/registry/route.ts     GET/POST — liste et ajout de cadeaux (protégé)
-  api/admin/registry/[id]/route.ts  PATCH/DELETE — modifier ou supprimer un cadeau
-  api/admin/registry/lock/route.ts  POST — verrouiller/déverrouiller le registre
+  api/admin/registry/route.ts     GET/POST — liste et ajout (protégé, ?category=)
+  api/admin/registry/[id]/route.ts  PATCH/DELETE — modifier ou supprimer un article
+  api/admin/registry/lock/route.ts  POST — verrouiller/déverrouiller (partagé)
 components/
   rsvp-form.tsx                Formulaire complet (RHF + Zod)
   baby-messages.tsx             Section publique des messages
-  gift-registry-list.tsx         Liste publique du registre de cadeaux
+  gift-registry-list.tsx         Liste publique réutilisée par /registre et /livres
   safari-accents.tsx            Illustrations SVG décoratives (thème safari)
   admin/rsvp-table.tsx           Tableau, statistiques, export CSV
-  admin/gift-registry-manager.tsx  Gestion du registre + cadenas (admin)
+  admin/registries-panel.tsx      Assemble le cadenas + les deux listes (admin)
+  admin/registry-lock-control.tsx  Cadenas partagé cadeaux/livres (admin)
+  admin/category-registry-manager.tsx  Gestion d'une liste (cadeaux OU livres)
   ui/*                          Composants façon shadcn/ui
 lib/
   site-config.ts                Contenu de l'événement (à personnaliser)

@@ -4,35 +4,34 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { GiftRegistryList, type PublicGiftItem } from "@/components/gift-registry-list";
 import { siteConfig } from "@/lib/site-config";
-import { Elephant, AcaciaTree, DotCluster } from "@/components/safari-accents";
+import { LeafBranch, BirdFlock } from "@/components/safari-accents";
 
 export const metadata: Metadata = {
-  title: `Registre de cadeaux — ${siteConfig.title}`,
+  title: `Idées de livres — ${siteConfig.title}`,
 };
 
 export const dynamic = "force-dynamic";
 
-export default async function RegistryPage() {
+export default async function BookIdeasPage() {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("gift_items")
     .select("id, name, description, price, link_url")
-    .eq("category", "cadeau")
+    .eq("category", "livre")
     .eq("is_purchased", false)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
 
   if (error) {
-    console.error("Erreur de lecture du registre de cadeaux :", error);
+    console.error("Erreur de lecture des idées de livres :", error);
   }
 
   const items = (data ?? []) as PublicGiftItem[];
 
   return (
     <main className="safari-toile-bg relative min-h-screen overflow-hidden px-6 py-16">
-      <AcaciaTree className="pointer-events-none absolute -left-10 top-0 hidden h-64 w-52 text-sage-300/40 lg:block" />
-      <Elephant className="pointer-events-none absolute -right-8 bottom-4 hidden h-32 w-40 text-sage-400/40 lg:block" />
-      <DotCluster className="pointer-events-none absolute right-16 top-6 hidden h-20 w-20 text-sage-400 md:block" />
+      <LeafBranch className="pointer-events-none absolute -left-8 top-0 hidden h-64 w-32 text-sage-300/40 lg:block" />
+      <BirdFlock className="pointer-events-none absolute right-10 top-8 hidden h-8 w-24 text-sage-500/45 md:block" />
 
       <div className="relative mx-auto max-w-3xl">
         <Link
@@ -43,15 +42,20 @@ export default async function RegistryPage() {
         </Link>
 
         <div className="mb-8 text-center">
-          <h1 className="font-display text-3xl font-semibold">Registre de cadeaux spéciaux</h1>
+          <h1 className="font-display text-3xl font-semibold">Idées de livres</h1>
           <p className="mt-2 text-muted-foreground">
-            Quelques idées un peu plus dispendieuses, à offrir seul·e ou à plusieurs. Un cadeau
-            disparaît de la liste dès qu&apos;il trouve preneur — merci de cliquer «&nbsp;Je
-            l&apos;offre&nbsp;» seulement si vous comptez vraiment vous en occuper.
+            Quelques suggestions de livres pour enfant, si vous voulez vous en procurer un pour
+            y écrire un mot à bébé. Un titre disparaît de la liste dès qu&apos;il trouve preneur
+            — mais n&apos;importe quel livre pour enfant fait tout aussi bien l&apos;affaire si
+            vous préférez choisir le vôtre.
           </p>
         </div>
 
-        <GiftRegistryList initialItems={items} />
+        <GiftRegistryList
+          initialItems={items}
+          emptyTitle="Aucune suggestion de livre pour le moment"
+          emptyMessage="Choisissez simplement le livre pour enfant de votre choix — l'important, c'est le mot que vous y écrirez pour bébé."
+        />
       </div>
     </main>
   );

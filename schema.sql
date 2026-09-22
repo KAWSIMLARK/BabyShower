@@ -105,10 +105,28 @@ create table if not exists public.gift_items (
   link_url text,
   sort_order integer not null default 0,
   is_purchased boolean not null default false,
-  purchased_at timestamptz
+  purchased_at timestamptz,
+  -- 'cadeau' = registre de cadeaux spéciaux (/registre) ; 'livre' = idées de
+  -- livres pour le mot à bébé (/livres). Même table, même mécanisme anti-
+  -- doublon et même cadenas — juste une liste séparée pour l'affichage.
+  category text not null default 'cadeau'
 );
 
-comment on table public.gift_items is 'Registre de cadeaux personnalisé (plus dispendieux)';
+comment on table public.gift_items is 'Registre de cadeaux personnalisé (plus dispendieux) et idées de livres';
+
+-- Migration pour une table gift_items déjà existante (créée avant l'ajout de
+-- "category") : sans effet si la colonne existe déjà ou sur une base neuve.
+alter table public.gift_items add column if not exists category text not null default 'cadeau';
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'gift_items_category_check'
+  ) then
+    alter table public.gift_items
+      add constraint gift_items_category_check check (category in ('cadeau', 'livre'));
+  end if;
+end $$;
 
 alter table public.gift_items enable row level security;
 

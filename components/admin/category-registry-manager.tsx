@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Lock, Unlock, Plus, Trash2, Pencil, Check, X, Gift } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, Trash2, Pencil, Check, X, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,15 +28,28 @@ const priceFormatter = new Intl.NumberFormat("fr-CA", {
 type NewItemForm = { name: string; price: string; linkUrl: string; description: string };
 const emptyForm: NewItemForm = { name: "", price: "", linkUrl: "", description: "" };
 
-export function GiftRegistryManager({
+export function CategoryRegistryManager({
+  category,
+  title,
+  itemLabel,
+  nameLabel,
+  namePlaceholder,
+  emptyIcon: EmptyIcon,
+  emptyMessage,
   initialItems,
-  initialLocked,
+  locked,
 }: {
+  category: "cadeau" | "livre";
+  title: string;
+  itemLabel: string;
+  nameLabel: string;
+  namePlaceholder: string;
+  emptyIcon: LucideIcon;
+  emptyMessage: string;
   initialItems: GiftItemRow[];
-  initialLocked: boolean;
+  locked: boolean;
 }) {
   const [items, setItems] = useState(initialItems);
-  const [locked, setLocked] = useState(initialLocked);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState<NewItemForm>(emptyForm);
@@ -46,20 +59,28 @@ export function GiftRegistryManager({
   const [editForm, setEditForm] = useState<NewItemForm>(emptyForm);
   const [togglingPurchasedId, setTogglingPurchasedId] = useState<string | null>(null);
 
-  const [lockPrompt, setLockPrompt] = useState<"none" | "set-password" | "unlock">("none");
-  const [passwordInput, setPasswordInput] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [lockError, setLockError] = useState<string | null>(null);
-  const [lockBusy, setLockBusy] = useState(false);
+  const isFirstRender = useRef(true);
 
   async function refreshFromServer() {
-    const response = await fetch("/api/admin/registry");
+    const response = await fetch(`/api/admin/registry?category=${category}`);
     if (response.ok) {
       const data = await response.json();
       setItems(data.data);
-      setLocked(data.locked);
     }
   }
+
+  // Le cadenas est partagé et géré par le parent : quand il change, on
+  // recharge pour obtenir la version masquée (ou démasquée) depuis le
+  // serveur, plutôt que de se fier à une valeur locale potentiellement
+  // périmée.
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    refreshFromServer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locked]);
 
   async function handleAddItem() {
     if (!newItem.name.trim()) return;
@@ -73,6 +94,7 @@ export function GiftRegistryManager({
           description: newItem.description || undefined,
           price: newItem.price ? Number(newItem.price) : null,
           linkUrl: newItem.linkUrl || undefined,
+          category,
         }),
       });
       if (response.ok) {
@@ -81,7 +103,7 @@ export function GiftRegistryManager({
         await refreshFromServer();
       } else {
         const data = await response.json().catch(() => null);
-        window.alert(data?.message ?? "Impossible d'ajouter ce cadeau.");
+        window.alert(data?.message ?? `Impossible d'ajouter ${itemLabel}.`);
       }
     } finally {
       setSaving(false);
@@ -116,7 +138,7 @@ export function GiftRegistryManager({
         await refreshFromServer();
       } else {
         const data = await response.json().catch(() => null);
-        window.alert(data?.message ?? "Impossible de modifier ce cadeau.");
+        window.alert(data?.message ?? `Impossible de modifier ${itemLabel}.`);
       }
     } finally {
       setSaving(false);
@@ -138,7 +160,7 @@ export function GiftRegistryManager({
         );
       } else {
         const data = await response.json().catch(() => null);
-        window.alert(data?.message ?? "Impossible de mettre à jour ce cadeau.");
+        window.alert(data?.message ?? "Impossible de mettre à jour cet article.");
       }
     } finally {
       setTogglingPurchasedId(null);
@@ -146,191 +168,36 @@ export function GiftRegistryManager({
   }
 
   async function handleDelete(item: GiftItemRow) {
-    const confirmed = window.confirm(`Supprimer "${item.name}" du registre ?`);
+    const confirmed = window.confirm(`Supprimer "${item.name}" ?`);
     if (!confirmed) return;
     const response = await fetch(`/api/admin/registry/${item.id}`, { method: "DELETE" });
     if (response.ok) {
       setItems((prev) => prev.filter((i) => i.id !== item.id));
     } else {
       const data = await response.json().catch(() => null);
-      window.alert(data?.message ?? "Impossible de supprimer ce cadeau.");
-    }
-  }
-
-  async function handleLockClick() {
-    setLockError(null);
-    // On ne sait pas côté client si un mot de passe existe déjà : on tente un
-    // verrouillage direct, l'API demandera un nouveau mot de passe si besoin.
-    const response = await fetch("/api/admin/registry/lock", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "lock" }),
-    });
-    if (response.ok) {
-      setLocked(true);
-      await refreshFromServer();
-      return;
-    }
-    if (response.status === 400) {
-      // Aucun mot de passe configuré : on en demande un nouveau.
-      setLockPrompt("set-password");
-      return;
-    }
-    const data = await response.json().catch(() => null);
-    window.alert(data?.message ?? "Impossible de verrouiller le registre.");
-  }
-
-  async function handleConfirmSetPassword() {
-    setLockError(null);
-    if (passwordInput.length < 4) {
-      setLockError("Le mot de passe doit contenir au moins 4 caractères.");
-      return;
-    }
-    if (passwordInput !== passwordConfirm) {
-      setLockError("Les deux mots de passe ne correspondent pas.");
-      return;
-    }
-    setLockBusy(true);
-    try {
-      const response = await fetch("/api/admin/registry/lock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "lock", password: passwordInput }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        setLockError(data.message ?? "Erreur lors du verrouillage.");
-        return;
-      }
-      setLocked(true);
-      setLockPrompt("none");
-      setPasswordInput("");
-      setPasswordConfirm("");
-      await refreshFromServer();
-    } finally {
-      setLockBusy(false);
-    }
-  }
-
-  async function handleConfirmUnlock() {
-    setLockError(null);
-    setLockBusy(true);
-    try {
-      const response = await fetch("/api/admin/registry/lock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "unlock", password: passwordInput }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        setLockError(data.message ?? "Mot de passe incorrect.");
-        return;
-      }
-      setLocked(false);
-      setLockPrompt("none");
-      setPasswordInput("");
-      await refreshFromServer();
-    } finally {
-      setLockBusy(false);
+      window.alert(data?.message ?? "Impossible de supprimer cet article.");
     }
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-xl font-semibold">Registre de cadeaux spéciaux</h2>
-        <div className="flex items-center gap-2">
-          {locked ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setLockPrompt("unlock");
-                setLockError(null);
-              }}
-            >
-              <Unlock className="h-4 w-4" /> Déverrouiller
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" onClick={handleLockClick}>
-              <Lock className="h-4 w-4" /> Verrouiller le registre
-            </Button>
-          )}
-          <Button size="sm" onClick={() => setShowAddForm((v) => !v)}>
-            <Plus className="h-4 w-4" /> Ajouter un cadeau
-          </Button>
-        </div>
+        <h3 className="font-display text-lg font-semibold">{title}</h3>
+        <Button size="sm" onClick={() => setShowAddForm((v) => !v)}>
+          <Plus className="h-4 w-4" /> Ajouter {itemLabel}
+        </Button>
       </div>
-
-      {locked && (
-        <p className="rounded-xl bg-accent p-3 text-sm text-accent-foreground">
-          🔒 Le statut des achats est masqué — tu peux toujours ajouter, modifier ou supprimer des
-          cadeaux, mais tu ne vois pas ce qui a été offert. Entre le mot de passe pour déverrouiller.
-        </p>
-      )}
-
-      {lockPrompt !== "none" && (
-        <Card className="border-primary/30">
-          <CardContent className="space-y-3 p-5">
-            <p className="font-semibold">
-              {lockPrompt === "set-password"
-                ? "Choisis un mot de passe pour pouvoir déverrouiller plus tard"
-                : "Entre le mot de passe pour déverrouiller"}
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input
-                type="password"
-                placeholder="Mot de passe"
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-              />
-              {lockPrompt === "set-password" && (
-                <Input
-                  type="password"
-                  placeholder="Confirmer le mot de passe"
-                  value={passwordConfirm}
-                  onChange={(e) => setPasswordConfirm(e.target.value)}
-                />
-              )}
-            </div>
-            {lockError && <p className="text-sm text-destructive">{lockError}</p>}
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                disabled={lockBusy}
-                onClick={
-                  lockPrompt === "set-password" ? handleConfirmSetPassword : handleConfirmUnlock
-                }
-              >
-                Confirmer
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setLockPrompt("none");
-                  setPasswordInput("");
-                  setPasswordConfirm("");
-                  setLockError(null);
-                }}
-              >
-                Annuler
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {showAddForm && (
         <Card>
           <CardContent className="space-y-3 p-5">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="grid gap-1.5">
-                <Label>Nom du cadeau *</Label>
+                <Label>{nameLabel} *</Label>
                 <Input
                   value={newItem.name}
                   onChange={(e) => setNewItem((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="Ex : Poussette convertible"
+                  placeholder={namePlaceholder}
                 />
               </div>
               <div className="grid gap-1.5">
@@ -339,7 +206,7 @@ export function GiftRegistryManager({
                   type="number"
                   value={newItem.price}
                   onChange={(e) => setNewItem((f) => ({ ...f, price: e.target.value }))}
-                  placeholder="350"
+                  placeholder="25"
                 />
               </div>
             </div>
@@ -374,8 +241,8 @@ export function GiftRegistryManager({
         {items.length === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center gap-2 p-8 text-center text-muted-foreground">
-              <Gift className="h-8 w-8" />
-              Aucun cadeau ajouté pour le moment.
+              <EmptyIcon className="h-8 w-8" />
+              {emptyMessage}
             </CardContent>
           </Card>
         )}
@@ -388,7 +255,7 @@ export function GiftRegistryManager({
                   <Input
                     value={editForm.name}
                     onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-                    placeholder="Nom"
+                    placeholder={nameLabel}
                   />
                   <Input
                     type="number"

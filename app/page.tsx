@@ -50,6 +50,11 @@ export default function HomePage() {
                 Plutôt qu&apos;une carte, apportez un petit livre pour enfant et écrivez-y
                 un mot pour bébé — un trésor à lire en grandissant.
               </p>
+              <Button asChild variant="secondary" size="sm" className="mt-1">
+                <Link href="/livres">
+                  <BookOpen className="h-4 w-4" /> Idées de livres
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
