@@ -14,11 +14,13 @@ export default async function PariPage() {
   const [
     { data: closedFlag },
     { data: bettingEnabledFlag },
+    { data: deadlineFlag },
     { data: betsData, error: betsError },
     { data: userData },
   ] = await Promise.all([
     supabase.rpc("get_gender_reveal_enabled"),
     supabase.rpc("get_betting_enabled"),
+    supabase.rpc("get_betting_deadline"),
     supabase
       .from("gender_bets")
       .select("id, bettor_name, amount, choice, created_at")
@@ -31,6 +33,8 @@ export default async function PariPage() {
 
   const closed = Boolean(closedFlag);
   const bettingEnabled = Boolean(bettingEnabledFlag);
+  const bettingDeadline = (deadlineFlag as string | null) ?? null;
+  const deadlinePassed = !!bettingDeadline && new Date(bettingDeadline) <= new Date();
 
   const viewerEmail = userData?.user?.email?.toLowerCase();
   const isAdminViewer = !!viewerEmail && ADMIN_EMAILS.includes(viewerEmail);
@@ -48,6 +52,8 @@ export default async function PariPage() {
           initialBets={(betsData ?? []) as BetRow[]}
           closed={closed}
           bettingEnabled={bettingEnabled}
+          bettingDeadline={bettingDeadline}
+          deadlinePassed={deadlinePassed}
           isAdminViewer={isAdminViewer}
           winningGender={winningGender}
         />

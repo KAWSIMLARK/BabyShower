@@ -24,18 +24,22 @@ export function BettingPool({
   initialBets,
   closed,
   bettingEnabled,
+  bettingDeadline,
+  deadlinePassed,
   isAdminViewer,
   winningGender,
 }: {
   initialBets: BetRow[];
   closed: boolean;
   bettingEnabled: boolean;
+  bettingDeadline: string | null;
+  deadlinePassed: boolean;
   isAdminViewer: boolean;
   winningGender: "girl" | "boy" | null;
 }) {
   const router = useRouter();
   const notYetOpen = !closed && !bettingEnabled;
-  const canBet = !closed && (bettingEnabled || isAdminViewer);
+  const canBet = !closed && !deadlinePassed && (bettingEnabled || isAdminViewer);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [choice, setChoice] = useState<"girl" | "boy" | null>(null);
@@ -129,6 +133,15 @@ export function BettingPool({
           la révélation, les gagnant·es récupèrent leur mise, plus leur part du pot des
           perdant·es.
         </p>
+        {bettingDeadline && !closed && (
+          <p className="text-sm font-medium text-muted-foreground">
+            {deadlinePassed ? "Mises fermées depuis le " : "Mises acceptées jusqu'au "}
+            {new Date(bettingDeadline).toLocaleString("fr-CA", {
+              dateStyle: "long",
+              timeStyle: "short",
+            })}
+          </p>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -169,6 +182,15 @@ export function BettingPool({
                 Les mises sont fermées — le résultat s&apos;en vient !
               </p>
             )}
+          </CardContent>
+        </Card>
+      ) : deadlinePassed ? (
+        <Card className="bg-secondary/40">
+          <CardContent className="space-y-1 p-6 text-center">
+            <p className="font-display text-xl font-semibold">Les mises sont fermées</p>
+            <p className="text-sm text-muted-foreground">
+              La date limite pour parier est passée — le résultat s&apos;en vient !
+            </p>
           </CardContent>
         </Card>
       ) : !canBet ? (

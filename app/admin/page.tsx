@@ -37,7 +37,7 @@ export default async function AdminPage() {
       .order("created_at", { ascending: true }),
     supabase
       .from("gender_reveal_settings")
-      .select("game_enabled, baby_gender, betting_enabled")
+      .select("game_enabled, baby_gender, betting_enabled, betting_deadline")
       .eq("id", true)
       .maybeSingle(),
     supabase.from("gender_reveal_guesses").select("guess"),
@@ -122,6 +122,7 @@ export default async function AdminPage() {
         <BettingAdminPanel
           initialBets={(betsData ?? []) as AdminBetRow[]}
           initialBettingEnabled={genderRevealRow?.betting_enabled ?? false}
+          initialBettingDeadline={genderRevealRow?.betting_deadline ?? null}
         />
       </div>
     </main>

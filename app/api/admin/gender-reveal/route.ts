@@ -11,7 +11,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("gender_reveal_settings")
-    .select("game_enabled, baby_gender, betting_enabled")
+    .select("game_enabled, baby_gender, betting_enabled, betting_deadline")
     .eq("id", true)
     .maybeSingle();
 
@@ -24,6 +24,7 @@ export async function GET() {
     game_enabled: data?.game_enabled ?? false,
     baby_gender: data?.baby_gender ?? null,
     betting_enabled: data?.betting_enabled ?? false,
+    betting_deadline: data?.betting_deadline ?? null,
   });
 }
 
@@ -31,6 +32,7 @@ type UpdateBody = {
   game_enabled?: boolean;
   baby_gender?: "girl" | "boy" | null;
   betting_enabled?: boolean;
+  betting_deadline?: string | null;
 };
 
 export async function POST(request: Request) {
@@ -47,6 +49,15 @@ export async function POST(request: Request) {
     update.baby_gender = body.baby_gender;
   }
   if (typeof body.betting_enabled === "boolean") update.betting_enabled = body.betting_enabled;
+  if (body.betting_deadline === null) {
+    update.betting_deadline = null;
+  } else if (typeof body.betting_deadline === "string") {
+    const parsed = new Date(body.betting_deadline);
+    if (Number.isNaN(parsed.getTime())) {
+      return NextResponse.json({ message: "Date limite invalide." }, { status: 400 });
+    }
+    update.betting_deadline = parsed.toISOString();
+  }
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ message: "Aucun champ valide à mettre à jour." }, { status: 400 });
@@ -57,7 +68,7 @@ export async function POST(request: Request) {
     .from("gender_reveal_settings")
     .update(update)
     .eq("id", true)
-    .select("game_enabled, baby_gender, betting_enabled");
+    .select("game_enabled, baby_gender, betting_enabled, betting_deadline");
 
   if (error) {
     console.error("Erreur lors de la mise à jour de la configuration du jeu :", error);

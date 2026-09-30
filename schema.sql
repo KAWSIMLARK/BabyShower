@@ -226,6 +226,18 @@ on conflict (id) do nothing;
 alter table public.gender_reveal_settings
   add column if not exists betting_enabled boolean not null default false;
 
+-- Date/heure limite pour placer une mise (voir plus bas) : passé ce moment,
+-- les nouvelles mises sont automatiquement refusées, sans action manuelle.
+alter table public.gender_reveal_settings
+  add column if not exists betting_deadline timestamptz;
+
+-- Valeur initiale demandée : demain 9 h (heure de l'Est, calculée à partir de
+-- la date du jour à Trois-Rivières pour éviter tout décalage lié à UTC).
+update public.gender_reveal_settings
+set betting_deadline =
+  (((now() at time zone 'America/Toronto')::date + 1) + interval '9 hours') at time zone 'America/Toronto'
+where id = true;
+
 alter table public.gender_reveal_settings enable row level security;
 
 -- Seul l'administrateur authentifié peut lire/modifier la configuration
@@ -262,6 +274,20 @@ as $$
 $$;
 
 grant execute on function public.get_betting_enabled() to anon, authenticated;
+
+-- Date/heure limite du pari, exposée publiquement (rien de sensible) pour
+-- l'afficher sur /pari et calculer si le délai est dépassé.
+create or replace function public.get_betting_deadline()
+returns timestamptz
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select betting_deadline from public.gender_reveal_settings where id = true;
+$$;
+
+grant execute on function public.get_betting_deadline() to anon, authenticated;
 
 -- Révélation : ne renvoie le sexe qu'au moment où le joueur termine les 3
 -- mini-jeux (appelée par /api/gender-reveal/reveal, jamais depuis le HTML ou
@@ -357,32 +383,47 @@ create policy "Tout le monde peut consulter les paris"
   using (true);
 
 -- Migration pour une table gender_bets déjà créée avant l'ajout du mode
--- test (betting_enabled) : recrée la politique avec la double condition,
--- séparée par rôle pour que l'admin puisse tester avant l'ouverture publique.
+-- test (betting_enabled) ou de la date limite (betting_deadline) : recrée
+-- les politiques à jour, séparées par rôle pour que l'admin puisse tester
+-- avant l'ouverture publique.
 drop policy if exists "Tout le monde peut parier tant que c'est ouvert" on public.gender_bets;
+drop policy if exists "Les invités peuvent parier une fois le pari ouvert" on public.gender_bets;
+drop policy if exists "L'administrateur peut parier en tout temps avant la révélation" on public.gender_bets;
 
 -- Les invité·es (anon) ne peuvent parier que si l'admin a ouvert le pari
--- publiquement, et jamais après la révélation.
+-- publiquement, avant la date limite, et jamais après la révélation.
 create policy "Les invités peuvent parier une fois le pari ouvert"
   on public.gender_bets
   for insert
   to anon
   with check (
     coalesce(
-      (select betting_enabled and not game_enabled from public.gender_reveal_settings where id = true),
+      (
+        select betting_enabled
+          and not game_enabled
+          and (betting_deadline is null or now() < betting_deadline)
+        from public.gender_reveal_settings where id = true
+      ),
       false
     )
   );
 
 -- L'administrateur (seul compte "authenticated" possible sur ce site) peut
--- tester le formulaire de pari à tout moment avant la révélation, même en
--- mode test — pratique pour vérifier le rendu avant d'ouvrir aux invité·es.
+-- tester le formulaire de pari à tout moment avant la révélation ET avant la
+-- date limite — la date limite s'applique aussi à lui, pour que le
+-- comportement automatique soit fiable et prévisible pour tout le monde.
 create policy "L'administrateur peut parier en tout temps avant la révélation"
   on public.gender_bets
   for insert
   to authenticated
   with check (
-    coalesce((select not game_enabled from public.gender_reveal_settings where id = true), true)
+    coalesce(
+      (
+        select not game_enabled and (betting_deadline is null or now() < betting_deadline)
+        from public.gender_reveal_settings where id = true
+      ),
+      true
+    )
   );
 
 -- Permet à l'administrateur de supprimer un pari erroné (doublon, annulation,
