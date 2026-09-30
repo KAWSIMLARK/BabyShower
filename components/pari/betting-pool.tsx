@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, TrendingUp, FlaskConical } from "lucide-react";
+import { Sparkles, FlaskConical } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -218,53 +218,6 @@ export function BettingPool({
           </CardContent>
         </Card>
       )}
-
-      <div>
-        <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-semibold">
-          <TrendingUp className="h-5 w-5 text-primary" /> Mises placées ({initialBets.length})
-        </h2>
-        {initialBets.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Personne n&apos;a encore parié.</p>
-        ) : (
-          <div className="overflow-hidden rounded-xl border">
-            <table className="w-full text-sm">
-              <thead className="bg-secondary/50 text-left">
-                <tr>
-                  <th className="p-3">Nom</th>
-                  <th className="p-3">Mise</th>
-                  <th className="p-3">Choix</th>
-                  {closed && winningGender && <th className="p-3">Résultat</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {initialBets.map((bet) => {
-                  const won = closed && winningGender === bet.choice;
-                  const payout =
-                    won && winningPool > 0 ? (Number(bet.amount) * total) / winningPool : null;
-                  return (
-                    <tr key={bet.id} className="border-t">
-                      <td className="p-3">{bet.bettor_name}</td>
-                      <td className="p-3">{formatMoney(Number(bet.amount))}</td>
-                      <td className="p-3">{bet.choice === "girl" ? "Fille 💕" : "Garçon 💙"}</td>
-                      {closed && winningGender && (
-                        <td className="p-3">
-                          {won ? (
-                            <span className="font-semibold text-primary">
-                              Gagné · {payout ? formatMoney(payout) : formatMoney(Number(bet.amount))}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">Perdu</span>
-                          )}
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

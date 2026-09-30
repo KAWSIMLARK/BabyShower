@@ -22,6 +22,7 @@ export default async function PariPage() {
     supabase
       .from("gender_bets")
       .select("id, bettor_name, amount, choice, created_at")
+      .eq("status", "accepted")
       .order("created_at", { ascending: false }),
     supabase.auth.getUser(),
   ]);

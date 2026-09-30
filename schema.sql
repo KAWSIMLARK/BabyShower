@@ -326,8 +326,25 @@ create table if not exists public.gender_bets (
   created_at timestamptz not null default now(),
   bettor_name text not null,
   amount numeric(10, 2) not null check (amount > 0),
-  choice text not null check (choice in ('girl', 'boy'))
+  choice text not null check (choice in ('girl', 'boy')),
+  status text not null default 'pending' check (status in ('pending', 'accepted', 'rejected'))
 );
+
+-- Migration pour une table gender_bets déjà créée avant l'ajout du statut :
+-- toute mise déjà là reste "pending" (à confirmer manuellement) tant qu'elle
+-- n'a pas ce champ.
+alter table public.gender_bets
+  add column if not exists status text not null default 'pending';
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'gender_bets_status_check'
+  ) then
+    alter table public.gender_bets
+      add constraint gender_bets_status_check check (status in ('pending', 'accepted', 'rejected'));
+  end if;
+end $$;
 
 alter table public.gender_bets enable row level security;
 
@@ -375,6 +392,15 @@ create policy "Seuls les utilisateurs authentifiés peuvent supprimer un pari"
   for delete
   to authenticated
   using (true);
+
+-- Permet à l'administrateur d'accepter/refuser une mise (une fois le
+-- virement reçu ou non) — seules les mises "accepted" comptent dans la cote.
+create policy "Seuls les utilisateurs authentifiés peuvent modifier le statut d'un pari"
+  on public.gender_bets
+  for update
+  to authenticated
+  using (true)
+  with check (true);
 
 -- ---------------------------------------------------------------------------
 -- IMPORTANT — Création du compte administrateur

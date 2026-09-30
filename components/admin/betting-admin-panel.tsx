@@ -2,21 +2,30 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { TrendingUp, Trash2, RotateCcw } from "lucide-react";
+import { TrendingUp, Trash2, RotateCcw, Check, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
+export type BetStatus = "pending" | "accepted" | "rejected";
 
 export interface AdminBetRow {
   id: string;
   bettor_name: string;
   amount: number;
   choice: "girl" | "boy";
+  status: BetStatus;
   created_at: string;
 }
 
 function formatMoney(value: number) {
   return value.toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+}
+
+function statusLabel(status: BetStatus) {
+  if (status === "accepted") return "Accepté";
+  if (status === "rejected") return "Refusé";
+  return "En attente";
 }
 
 export function BettingAdminPanel({
@@ -34,10 +43,18 @@ export function BettingAdminPanel({
   const [resetBusy, setResetBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { poolGirl, poolBoy, total } = useMemo(() => {
-    const poolGirl = bets.filter((b) => b.choice === "girl").reduce((s, b) => s + Number(b.amount), 0);
-    const poolBoy = bets.filter((b) => b.choice === "boy").reduce((s, b) => s + Number(b.amount), 0);
-    return { poolGirl, poolBoy, total: poolGirl + poolBoy };
+  const { poolGirl, poolBoy, total, pendingTotal, pendingCount } = useMemo(() => {
+    const accepted = bets.filter((b) => b.status === "accepted");
+    const poolGirl = accepted.filter((b) => b.choice === "girl").reduce((s, b) => s + Number(b.amount), 0);
+    const poolBoy = accepted.filter((b) => b.choice === "boy").reduce((s, b) => s + Number(b.amount), 0);
+    const pending = bets.filter((b) => b.status === "pending");
+    return {
+      poolGirl,
+      poolBoy,
+      total: poolGirl + poolBoy,
+      pendingTotal: pending.reduce((s, b) => s + Number(b.amount), 0),
+      pendingCount: pending.length,
+    };
   }, [bets]);
 
   async function toggleBetting() {
@@ -57,6 +74,26 @@ export function BettingAdminPanel({
       if (typeof data.betting_enabled === "boolean") setBettingEnabled(data.betting_enabled);
     } finally {
       setToggleBusy(false);
+    }
+  }
+
+  async function handleStatusChange(id: string, status: BetStatus) {
+    setBusyId(id);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/bets/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        setError(data?.message ?? "Impossible de mettre à jour ce pari.");
+        return;
+      }
+      setBets((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -102,7 +139,8 @@ export function BettingAdminPanel({
               <TrendingUp className="h-5 w-5 text-primary" /> Pari amical sur le sexe
             </h2>
             <p className="text-sm text-muted-foreground">
-              Aucun paiement réel ici — les mises sont réglées entre vous et les invité·es.
+              Accepte une mise une fois le virement/paiement reçu — seules les mises acceptées
+              comptent dans la cote.
             </p>
           </div>
           <Badge variant={bettingEnabled ? "default" : "outline"}>
@@ -131,10 +169,15 @@ export function BettingAdminPanel({
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-4">
           <p className="text-sm">
-            Pot total : <span className="font-semibold">{formatMoney(total)}</span>{" "}
+            Pot accepté : <span className="font-semibold">{formatMoney(total)}</span>{" "}
             <span className="text-muted-foreground">
               (Fille {formatMoney(poolGirl)} · Garçon {formatMoney(poolBoy)})
             </span>
+            {pendingCount > 0 && (
+              <span className="ml-2 text-muted-foreground">
+                · {pendingCount} en attente ({formatMoney(pendingTotal)})
+              </span>
+            )}
           </p>
           <Button
             size="sm"
@@ -185,6 +228,7 @@ export function BettingAdminPanel({
                   <th className="p-3">Nom</th>
                   <th className="p-3">Mise</th>
                   <th className="p-3">Choix</th>
+                  <th className="p-3">Statut</th>
                   <th className="p-3" />
                 </tr>
               </thead>
@@ -194,16 +238,52 @@ export function BettingAdminPanel({
                     <td className="p-3">{bet.bettor_name}</td>
                     <td className="p-3">{formatMoney(Number(bet.amount))}</td>
                     <td className="p-3">{bet.choice === "girl" ? "Fille 💕" : "Garçon 💙"}</td>
-                    <td className="p-3 text-right">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:bg-destructive/10"
-                        disabled={busyId === bet.id}
-                        onClick={() => handleDelete(bet.id)}
+                    <td className="p-3">
+                      <Badge
+                        variant={
+                          bet.status === "accepted"
+                            ? "default"
+                            : bet.status === "rejected"
+                              ? "destructive"
+                              : "outline"
+                        }
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        {statusLabel(bet.status)}
+                      </Badge>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-primary hover:bg-primary/10"
+                          disabled={busyId === bet.id || bet.status === "accepted"}
+                          onClick={() => handleStatusChange(bet.id, "accepted")}
+                          title="Accepter (virement reçu)"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10"
+                          disabled={busyId === bet.id || bet.status === "rejected"}
+                          onClick={() => handleStatusChange(bet.id, "rejected")}
+                          title="Refuser (virement non reçu)"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-muted-foreground hover:bg-destructive/10"
+                          disabled={busyId === bet.id}
+                          onClick={() => handleDelete(bet.id)}
+                          title="Supprimer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

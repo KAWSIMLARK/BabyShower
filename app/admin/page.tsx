@@ -43,7 +43,7 @@ export default async function AdminPage() {
     supabase.from("gender_reveal_guesses").select("guess"),
     supabase
       .from("gender_bets")
-      .select("id, bettor_name, amount, choice, created_at")
+      .select("id, bettor_name, amount, choice, status, created_at")
       .order("created_at", { ascending: false }),
   ]);
 
