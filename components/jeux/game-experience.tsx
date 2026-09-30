@@ -42,7 +42,13 @@ function stageFromProgress(progress: typeof defaultJeuxProgress): Stage {
   return "transition";
 }
 
-export function GameExperience({ publicEnabled }: { publicEnabled: boolean }) {
+export function GameExperience({
+  publicEnabled,
+  testGender,
+}: {
+  publicEnabled: boolean;
+  testGender?: "girl" | "boy" | null;
+}) {
   const [progress, setProgress, hydrated] = useLocalStorageState(
     JEUX_PROGRESS_KEY,
     defaultJeuxProgress
@@ -66,9 +72,22 @@ export function GameExperience({ publicEnabled }: { publicEnabled: boolean }) {
   return (
     <div className="relative mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-4 py-10">
       {!publicEnabled && (
-        <Badge variant="outline" className="absolute right-4 top-4 gap-1">
-          <FlaskConical className="h-3 w-3" /> MODE TEST
-        </Badge>
+        <div className="absolute right-4 top-4 flex items-center gap-2">
+          <Badge variant="outline" className="gap-1">
+            <FlaskConical className="h-3 w-3" /> MODE TEST
+          </Badge>
+          {testGender && (
+            <Badge
+              className="animate-pulse gap-1 border-none"
+              style={{
+                backgroundColor: jeuxConfig.reveal[testGender].colorSoft,
+                color: jeuxConfig.reveal[testGender].color,
+              }}
+            >
+              {testGender === "girl" ? "💕 Fille" : "💙 Garçon"}
+            </Badge>
+          )}
+        </div>
       )}
 
       {currentMissionIndex >= 0 && (
