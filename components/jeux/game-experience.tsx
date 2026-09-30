@@ -46,10 +46,12 @@ export function GameExperience({
   publicEnabled,
   isAdminViewer,
   testGender,
+  startAtReveal,
 }: {
   publicEnabled: boolean;
   isAdminViewer?: boolean;
   testGender?: "girl" | "boy" | null;
+  startAtReveal?: boolean;
 }) {
   const showTestBadge = !publicEnabled || Boolean(isAdminViewer);
   const shouldRecordVote = publicEnabled && !isAdminViewer;
@@ -57,9 +59,13 @@ export function GameExperience({
     JEUX_PROGRESS_KEY,
     defaultJeuxProgress
   );
-  const [stage, setStage] = useState<Stage | null>(null);
+  const [stage, setStage] = useState<Stage | null>(startAtReveal ? "reveal" : null);
 
-  const activeStage = stage ?? (hydrated ? stageFromProgress(progress) : "intro");
+  // Aperçu admin (?apercu=reveal) : ne touche jamais à la progression
+  // sauvegardée du joueur, seul l'affichage saute directement à la fin.
+  const activeStage = startAtReveal
+    ? "reveal"
+    : (stage ?? (hydrated ? stageFromProgress(progress) : "intro"));
 
   const currentMissionIndex = useMemo(() => {
     if (["maze", "maze-done"].includes(activeStage)) return 0;
@@ -191,8 +197,10 @@ export function GameExperience({
       )}
       {activeStage === "reveal" && (
         <RevealScreen
-          onRestart={restart}
-          onRevealed={() => setProgress((p) => ({ ...p, revealed: true }))}
+          onRestart={startAtReveal ? () => window.location.assign("/jeux") : restart}
+          onRevealed={() => {
+            if (!startAtReveal) setProgress((p) => ({ ...p, revealed: true }));
+          }}
         />
       )}
     </div>

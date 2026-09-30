@@ -12,7 +12,11 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
 // tester le jeu à tout moment, avant même que le bouton "Connaître le sexe"
 // n'apparaisse sur la page d'accueil. Le sexe reste protégé côté serveur
 // (voir /api/gender-reveal/reveal) peu importe l'état de ce flag.
-export default async function JeuxPage() {
+export default async function JeuxPage({
+  searchParams,
+}: {
+  searchParams: { apercu?: string };
+}) {
   const supabase = createClient();
   const [{ data: enabled }, { data: gender }, { data: userData }] = await Promise.all([
     supabase.rpc("get_gender_reveal_enabled"),
@@ -27,12 +31,18 @@ export default async function JeuxPage() {
   const viewerEmail = userData?.user?.email?.toLowerCase();
   const isAdminViewer = !!viewerEmail && ADMIN_EMAILS.includes(viewerEmail);
 
+  // Réservé à l'admin : ?apercu=reveal saute directement à l'animation finale
+  // (avec confettis) pour la tester sans refaire les 3 missions, même avant
+  // d'activer le jeu. Sans effet pour qui que ce soit d'autre.
+  const startAtReveal = isAdminViewer && searchParams.apercu === "reveal";
+
   return (
     <main className="safari-toile-bg min-h-screen">
       <GameExperience
         publicEnabled={Boolean(enabled)}
         isAdminViewer={isAdminViewer}
         testGender={gender === "girl" || gender === "boy" ? gender : null}
+        startAtReveal={startAtReveal}
       />
     </main>
   );

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, Eye, EyeOff, RotateCcw } from "lucide-react";
+import { Sparkles, Sparkle, RotateCcw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,6 @@ export function GenderRevealPanel({
   const [error, setError] = useState<string | null>(null);
   const [confirmGender, setConfirmGender] = useState<Gender>(null);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [previewGender, setPreviewGender] = useState(false);
 
   const totalGuesses = guesses.girl + guesses.boy;
   const girlPercent = totalGuesses > 0 ? Math.round((guesses.girl / totalGuesses) * 100) : 0;
@@ -241,24 +240,17 @@ export function GenderRevealPanel({
 
         <div className="flex flex-wrap items-center gap-3 border-t pt-4">
           <Button asChild size="sm" variant="outline">
-            <Link href="/jeux">Tester le jeu</Link>
+            <Link href="/jeux">Tester le jeu (les 3 missions)</Link>
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!gender}
-            onClick={() => setPreviewGender((v) => !v)}
-          >
-            {previewGender ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            {previewGender ? "Cacher le reveal test" : "Tester directement le reveal"}
+          <Button asChild size="sm" variant="ghost" disabled={!gender}>
+            <Link href={gender ? "/jeux?apercu=reveal" : "#"} aria-disabled={!gender}>
+              <Sparkle className="h-4 w-4" /> Voir l&apos;animation de révélation
+            </Link>
           </Button>
         </div>
-
-        {previewGender && gender && (
-          <p className="rounded-xl bg-secondary/50 p-3 text-sm">
-            Aperçu admin uniquement (n&apos;affecte pas le site public) : le reveal montrerait
-            actuellement{" "}
-            <strong>{gender === "girl" ? "C'est une fille !" : "C'est un garçon !"}</strong>
+        {!gender && (
+          <p className="text-xs text-muted-foreground">
+            Choisis d&apos;abord le sexe ci-dessus pour pouvoir prévisualiser l&apos;animation.
           </p>
         )}
       </CardContent>
