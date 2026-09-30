@@ -18,9 +18,8 @@ export default async function JeuxPage({
   searchParams: { apercu?: string };
 }) {
   const supabase = createClient();
-  const [{ data: enabled }, { data: gender }, { data: userData }] = await Promise.all([
+  const [{ data: enabled }, { data: userData }] = await Promise.all([
     supabase.rpc("get_gender_reveal_enabled"),
-    supabase.rpc("reveal_baby_gender"),
     supabase.auth.getUser(),
   ]);
 
@@ -30,6 +29,15 @@ export default async function JeuxPage({
   // invité·es avec ses propres essais.
   const viewerEmail = userData?.user?.email?.toLowerCase();
   const isAdminViewer = !!viewerEmail && ADMIN_EMAILS.includes(viewerEmail);
+
+  // Le sexe n'est demandé au serveur QUE pour l'admin (badge de test) — pour
+  // n'importe qui d'autre, on ne l'interroge même pas, afin qu'il ne se
+  // retrouve jamais dans le HTML/JSON envoyé au navigateur d'un·e invité·e.
+  let testGender: "girl" | "boy" | null = null;
+  if (isAdminViewer) {
+    const { data: gender } = await supabase.rpc("reveal_baby_gender");
+    if (gender === "girl" || gender === "boy") testGender = gender;
+  }
 
   // Réservé à l'admin : ?apercu=reveal saute directement à l'animation finale
   // (avec confettis) pour la tester sans refaire les 3 missions, même avant
@@ -41,7 +49,7 @@ export default async function JeuxPage({
       <GameExperience
         publicEnabled={Boolean(enabled)}
         isAdminViewer={isAdminViewer}
-        testGender={gender === "girl" || gender === "boy" ? gender : null}
+        testGender={testGender}
         startAtReveal={startAtReveal}
       />
     </main>

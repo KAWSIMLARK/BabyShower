@@ -87,7 +87,7 @@ export function GameExperience({
             <FlaskConical className="h-3 w-3" />
             {publicEnabled ? "VUE ADMIN (vote ignoré)" : "MODE TEST"}
           </Badge>
-          {testGender && (
+          {isAdminViewer && testGender && (
             <Badge
               className="animate-pulse gap-1 border-none"
               style={{
