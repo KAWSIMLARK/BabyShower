@@ -60,13 +60,13 @@ export const jeuxConfig = {
   reveal: {
     girl: {
       title: "C'est une fille !",
-      subtitle: "Bienvenue Bébé Lafrenière 💕",
+      subtitle: "Bienvenue Sofia Lafrenière 💕",
       color: "#e8a3b8",
       colorSoft: "#fbe7ee",
     },
     boy: {
       title: "C'est un garçon !",
-      subtitle: "Bienvenue Bébé Lafrenière 💙",
+      subtitle: "Bienvenue August Lafrenière 💙",
       color: "#7fa8c9",
       colorSoft: "#e7f0f7",
     },
