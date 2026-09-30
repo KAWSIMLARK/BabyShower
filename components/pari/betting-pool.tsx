@@ -134,13 +134,11 @@ export function BettingPool({
       <div className="grid gap-4 sm:grid-cols-2">
         <OddsCard
           label="Team Fille 💕"
-          pool={poolGirl}
           odds={oddsGirl}
           highlight={winningGender === "girl"}
         />
         <OddsCard
           label="Team Garçon 💙"
-          pool={poolBoy}
           odds={oddsBoy}
           highlight={winningGender === "boy"}
         />
@@ -246,12 +244,10 @@ export function BettingPool({
 
 function OddsCard({
   label,
-  pool,
   odds,
   highlight,
 }: {
   label: string;
-  pool: number;
   odds: number | null;
   highlight: boolean;
 }) {
@@ -260,7 +256,6 @@ function OddsCard({
       <CardContent className="space-y-1 p-5 text-center">
         <p className="font-semibold">{label}</p>
         <p className="text-2xl font-bold text-primary">{odds ? `${odds.toFixed(2)}x` : "—"}</p>
-        <p className="text-xs text-muted-foreground">Total misé : {formatMoney(pool)}</p>
       </CardContent>
     </Card>
   );
