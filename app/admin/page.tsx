@@ -5,6 +5,7 @@ import { RegistriesPanel } from "@/components/admin/registries-panel";
 import type { GiftItemRow } from "@/components/admin/category-registry-manager";
 import { LogoutButton } from "@/components/admin/logout-button";
 import { GenderRevealPanel } from "@/components/admin/gender-reveal-panel";
+import { BettingAdminPanel, type AdminBetRow } from "@/components/admin/betting-admin-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function AdminPage() {
     { data: bookData, error: bookError },
     { data: genderRevealRow, error: genderRevealError },
     { data: guessData, error: guessError },
+    { data: betsData, error: betsError },
   ] = await Promise.all([
     supabase.from("rsvp_responses").select("*").order("created_at", { ascending: false }),
     supabase.from("registry_lock").select("is_locked").eq("id", true).maybeSingle(),
@@ -39,6 +41,10 @@ export default async function AdminPage() {
       .eq("id", true)
       .maybeSingle(),
     supabase.from("gender_reveal_guesses").select("guess"),
+    supabase
+      .from("gender_bets")
+      .select("id, bettor_name, amount, choice, created_at")
+      .order("created_at", { ascending: false }),
   ]);
 
   if (lockError) console.error("Erreur de lecture du verrou du registre :", lockError);
@@ -47,6 +53,7 @@ export default async function AdminPage() {
   if (genderRevealError)
     console.error("Erreur de lecture de la configuration du jeu :", genderRevealError);
   if (guessError) console.error("Erreur de lecture des votes :", guessError);
+  if (betsError) console.error("Erreur de lecture des paris :", betsError);
 
   const guessCounts = (guessData ?? []).reduce(
     (acc, row) => {
@@ -111,6 +118,8 @@ export default async function AdminPage() {
           }
           initialGuesses={guessCounts}
         />
+
+        <BettingAdminPanel initialBets={(betsData ?? []) as AdminBetRow[]} />
       </div>
     </main>
   );

@@ -7,6 +7,7 @@ import {
   ExternalLink,
   BookOpen,
   Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { Button } from "@/components/ui/button";
@@ -154,6 +155,21 @@ export default async function HomePage() {
           Le registre Amazon s&apos;ouvre dans un nouvel onglet (Amazon ne permet pas
           l&apos;affichage de ses pages ailleurs).
         </p>
+      </section>
+
+      <section className="relative mx-auto max-w-2xl px-6 pb-16 text-center">
+        <h2 className="flex items-center justify-center gap-2 font-display text-2xl font-semibold">
+          <TrendingUp className="h-6 w-6 text-primary" /> Un petit pari amical
+        </h2>
+        <p className="mx-auto mt-2 max-w-md text-muted-foreground">
+          Pariez pour rire sur le sexe de bébé — la cote s&apos;ajuste en direct selon les
+          mises. Aucun paiement en ligne, tout se règle entre vous.
+        </p>
+        <Button asChild size="lg" className="mt-6">
+          <Link href="/pari">
+            <TrendingUp className="h-4 w-4" /> Parier sur le sexe
+          </Link>
+        </Button>
       </section>
 
       <BabyMessages />

@@ -291,6 +291,51 @@ create policy "Seuls les utilisateurs authentifiés peuvent supprimer des votes"
   to authenticated
   using (true);
 
+-- =============================================================================
+-- Pari amical sur le sexe du bébé (pool à la pari-mutuel)
+-- =============================================================================
+-- Aucun argent ne transite par le site : les invité·es indiquent seulement
+-- leur mise ici (payée en personne ou par Interac, en dehors du site) pour
+-- que la cote et les gains se calculent automatiquement. Les nouvelles mises
+-- sont bloquées dès que l'administrateur active la révélation (même
+-- interrupteur que Mission Bébé Lafrenière) — vérifié directement dans la
+-- politique RLS ci-dessous, pas seulement côté application, pour empêcher de
+-- parier après avoir triché sur l'état côté navigateur.
+
+create table if not exists public.gender_bets (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  bettor_name text not null,
+  amount numeric(10, 2) not null check (amount > 0),
+  choice text not null check (choice in ('girl', 'boy'))
+);
+
+alter table public.gender_bets enable row level security;
+
+-- Transparence : tout le monde voit les mises déjà placées, comme un vrai
+-- tableau de paris.
+create policy "Tout le monde peut consulter les paris"
+  on public.gender_bets
+  for select
+  to anon, authenticated
+  using (true);
+
+create policy "Tout le monde peut parier tant que c'est ouvert"
+  on public.gender_bets
+  for insert
+  to anon, authenticated
+  with check (
+    coalesce((select game_enabled from public.gender_reveal_settings where id = true), false) = false
+  );
+
+-- Permet à l'administrateur de supprimer un pari erroné (doublon, annulation,
+-- mise jamais réellement payée).
+create policy "Seuls les utilisateurs authentifiés peuvent supprimer un pari"
+  on public.gender_bets
+  for delete
+  to authenticated
+  using (true);
+
 -- ---------------------------------------------------------------------------
 -- IMPORTANT — Création du compte administrateur
 -- ---------------------------------------------------------------------------
