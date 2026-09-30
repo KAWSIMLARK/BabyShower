@@ -134,7 +134,13 @@ export function BettingPool({
           perdant·es.
         </p>
         {bettingDeadline && !closed && (
-          <p className="text-sm font-medium text-muted-foreground">
+          <p
+            className={`mx-auto inline-block rounded-full border-2 px-4 py-1.5 text-sm font-semibold ${
+              deadlinePassed
+                ? "border-border bg-secondary/50 text-muted-foreground"
+                : "border-primary bg-primary/15 text-primary"
+            }`}
+          >
             {deadlinePassed ? "Mises fermées depuis le " : "Mises acceptées jusqu'au "}
             {new Date(bettingDeadline).toLocaleString("fr-CA", {
               dateStyle: "long",
