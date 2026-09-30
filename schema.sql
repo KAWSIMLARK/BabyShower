@@ -201,6 +201,96 @@ create policy "Seuls les utilisateurs authentifiés peuvent gérer le verrou"
   using (true)
   with check (true);
 
+-- =============================================================================
+-- Mission Bébé Lafrenière (jeu de révélation du sexe)
+-- =============================================================================
+-- Ligne singleton (même technique que registry_lock). Le sexe n'est JAMAIS
+-- lisible par un visiteur anonyme via une requête directe sur cette table
+-- (RLS réservée aux comptes authentifiés) : les invité·es y accèdent
+-- uniquement via la fonction reveal_baby_gender() ci-dessous, appelée par
+-- notre API seulement au moment où le joueur termine les 3 mini-jeux.
+
+create table if not exists public.gender_reveal_settings (
+  id boolean primary key default true,
+  game_enabled boolean not null default false,
+  baby_gender text check (baby_gender in ('girl', 'boy')),
+  constraint gender_reveal_settings_singleton check (id)
+);
+
+insert into public.gender_reveal_settings (id, game_enabled)
+values (true, false)
+on conflict (id) do nothing;
+
+alter table public.gender_reveal_settings enable row level security;
+
+-- Seul l'administrateur authentifié peut lire/modifier la configuration
+create policy "Seuls les utilisateurs authentifiés peuvent gérer le jeu"
+  on public.gender_reveal_settings
+  for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- Statut public : uniquement le booléen "activé", jamais le sexe.
+create or replace function public.get_gender_reveal_enabled()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select coalesce((select game_enabled from public.gender_reveal_settings where id = true), false);
+$$;
+
+grant execute on function public.get_gender_reveal_enabled() to anon, authenticated;
+
+-- Révélation : ne renvoie le sexe qu'au moment où le joueur termine les 3
+-- mini-jeux (appelée par /api/gender-reveal/reveal, jamais depuis le HTML ou
+-- le bundle JS initial).
+create or replace function public.reveal_baby_gender()
+returns text
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select baby_gender from public.gender_reveal_settings where id = true;
+$$;
+
+grant execute on function public.reveal_baby_gender() to anon, authenticated;
+
+-- Votes anonymes "Team Fille / Team Garçon" posés juste avant la révélation
+-- (pur divertissement, aucune donnée personnelle) : visibles uniquement par
+-- l'admin dans /admin, sous forme de pourcentage.
+create table if not exists public.gender_reveal_guesses (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  guess text not null check (guess in ('girl', 'boy'))
+);
+
+alter table public.gender_reveal_guesses enable row level security;
+
+-- N'importe qui peut voter (anonyme, aucune identification)
+create policy "Tout le monde peut voter"
+  on public.gender_reveal_guesses
+  for insert
+  to anon, authenticated
+  with check (true);
+
+-- Seul l'administrateur authentifié peut consulter les votes
+create policy "Seuls les utilisateurs authentifiés peuvent lire les votes"
+  on public.gender_reveal_guesses
+  for select
+  to authenticated
+  using (true);
+
+-- Permet à l'administrateur de réinitialiser les votes de test avant la fête
+create policy "Seuls les utilisateurs authentifiés peuvent supprimer des votes"
+  on public.gender_reveal_guesses
+  for delete
+  to authenticated
+  using (true);
+
 -- ---------------------------------------------------------------------------
 -- IMPORTANT — Création du compte administrateur
 -- ---------------------------------------------------------------------------

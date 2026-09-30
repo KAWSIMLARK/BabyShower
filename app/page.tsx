@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { CalendarDays, MapPin, PartyPopper, Gift, ExternalLink, BookOpen } from "lucide-react";
+import {
+  CalendarDays,
+  MapPin,
+  PartyPopper,
+  Gift,
+  ExternalLink,
+  BookOpen,
+  Sparkles,
+} from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,10 +21,14 @@ import {
   BirdFlock,
 } from "@/components/safari-accents";
 import { BabyMessages } from "@/components/baby-messages";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = createClient();
+  const { data: genderRevealEnabled } = await supabase.rpc("get_gender_reveal_enabled");
+
   return (
     <main className="safari-toile-bg relative overflow-hidden">
       <LeafBranch className="pointer-events-none absolute -left-6 top-0 hidden h-72 w-40 text-sage-300/60 sm:block" />
@@ -58,6 +70,28 @@ export default function HomePage() {
             </CardContent>
           </Card>
         </div>
+
+        {genderRevealEnabled && (
+          <div className="mt-6 w-full">
+            <Card className="border-none bg-secondary/60 shadow-md">
+              <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
+                <Sparkles className="h-8 w-8 text-primary" />
+                <p className="font-display text-xl font-semibold">
+                  Une mission secrète vous attend…
+                </p>
+                <p className="max-w-md text-sm text-muted-foreground">
+                  Relevez trois petits défis pour découvrir si Bébé Lafrenière sera une fille
+                  ou un garçon !
+                </p>
+                <Button asChild size="lg" className="mt-1">
+                  <Link href="/jeux">
+                    <Sparkles className="h-4 w-4" /> Connaître le sexe
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <div className="mt-8 grid w-full gap-4 sm:grid-cols-2">
           <Card className="bg-white/70">

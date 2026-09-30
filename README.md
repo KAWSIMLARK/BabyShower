@@ -113,6 +113,29 @@ notée dans [`schema.sql`](./schema.sql) juste après la définition de la table
 n'existera pas et `/registre`/`/livres` resteront vides (rien n'est perdu, la colonne se rattrape
 après coup).
 
+## Mission Bébé Lafrenière (jeu de révélation du sexe)
+
+Un mini-jeu à 3 missions (labyrinthe, formes, casse-tête) suivi d'un rebondissement comique
+(« haha, on vous a bien eu ! ») et d'une double mise en scène avant de révéler si Bébé
+Lafrenière sera une fille ou un garçon.
+
+- `/jeux` est une route **toujours accessible** (même avant l'activation publique) pour tester
+  le jeu à l'avance — un badge **MODE TEST** s'affiche tant que le jeu n'est pas activé.
+- Dans `/admin`, la section **Mission Bébé Lafrenière** permet de choisir le sexe (avec
+  confirmation), d'activer/désactiver le bouton public, et de prévisualiser le reveal sans
+  affecter le site public.
+- Le bouton public **« Connaître le sexe »** n'apparaît sur la page d'accueil que lorsque le
+  jeu est activé.
+- Le sexe n'est **jamais** exposé publiquement avant l'activation : `/api/gender-reveal/reveal`
+  vérifie côté serveur que le jeu est activé avant de répondre, peu importe l'état du jeu côté
+  navigateur (localStorage) — impossible à contourner en trichant sur l'appareil du joueur.
+- La progression du joueur (missions complétées) est sauvegardée dans le `localStorage` de son
+  appareil uniquement — jamais envoyée au serveur.
+
+Ce jeu utilise une nouvelle table (`gender_reveal_settings`) et deux fonctions
+(`get_gender_reveal_enabled`, `reveal_baby_gender`) — voir la section correspondante dans
+[`schema.sql`](./schema.sql), à exécuter une fois dans le même projet Supabase que le reste.
+
 ## Structure du projet
 
 ```
@@ -131,6 +154,10 @@ app/
   api/admin/registry/route.ts     GET/POST — liste et ajout (protégé, ?category=)
   api/admin/registry/[id]/route.ts  PATCH/DELETE — modifier ou supprimer un article
   api/admin/registry/lock/route.ts  POST — verrouiller/déverrouiller (partagé)
+  jeux/page.tsx                  Mission Bébé Lafrenière (public, toujours accessible)
+  api/gender-reveal/status/route.ts  GET — jeu activé ou non (public)
+  api/gender-reveal/reveal/route.ts   POST — révèle le sexe (public, si activé seulement)
+  api/admin/gender-reveal/route.ts    GET/POST — configuration du jeu (protégé)
 components/
   rsvp-form.tsx                Formulaire complet (RHF + Zod)
   baby-messages.tsx             Section publique des messages
@@ -140,12 +167,20 @@ components/
   admin/registries-panel.tsx      Assemble le cadenas + les deux listes (admin)
   admin/registry-lock-control.tsx  Cadenas partagé cadeaux/livres (admin)
   admin/category-registry-manager.tsx  Gestion d'une liste (cadeaux OU livres)
+  admin/gender-reveal-panel.tsx  Contrôle du jeu (admin)
+  jeux/game-experience.tsx        Orchestrateur des étapes du jeu
+  jeux/maze-game.tsx, shapes-game.tsx, puzzle-game.tsx  Les 3 mini-jeux
+  jeux/twist-question.tsx         Rebondissement + question "team garçon/fille"
+  jeux/cinematic-countdown.tsx    Compte à rebours (utilisé 2 fois)
+  jeux/reveal-screen.tsx          Écran final + confettis
   ui/*                          Composants façon shadcn/ui
 lib/
   site-config.ts                Contenu de l'événement (à personnaliser)
   supabase/{client,server,middleware}.ts   Clients Supabase
   validations/rsvp.ts            Schéma Zod partagé client/serveur
   password.ts                    Hachage du mot de passe du cadenas (scrypt)
+  jeux/config.ts                  Textes et paramètres du jeu (à personnaliser)
+  jeux/maze-data.ts               Génération déterministe du labyrinthe
 schema.sql                      Schéma SQL + politiques RLS Supabase
 middleware.ts                    Protection des routes /admin et /api/admin
 ```
