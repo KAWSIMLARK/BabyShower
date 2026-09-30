@@ -44,11 +44,15 @@ function stageFromProgress(progress: typeof defaultJeuxProgress): Stage {
 
 export function GameExperience({
   publicEnabled,
+  isAdminViewer,
   testGender,
 }: {
   publicEnabled: boolean;
+  isAdminViewer?: boolean;
   testGender?: "girl" | "boy" | null;
 }) {
+  const showTestBadge = !publicEnabled || Boolean(isAdminViewer);
+  const shouldRecordVote = publicEnabled && !isAdminViewer;
   const [progress, setProgress, hydrated] = useLocalStorageState(
     JEUX_PROGRESS_KEY,
     defaultJeuxProgress
@@ -71,10 +75,11 @@ export function GameExperience({
 
   return (
     <div className="relative mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-4 py-10">
-      {!publicEnabled && (
+      {showTestBadge && (
         <div className="absolute right-4 top-4 flex items-center gap-2">
           <Badge variant="outline" className="gap-1">
-            <FlaskConical className="h-3 w-3" /> MODE TEST
+            <FlaskConical className="h-3 w-3" />
+            {publicEnabled ? "VUE ADMIN (vote ignoré)" : "MODE TEST"}
           </Badge>
           {testGender && (
             <Badge
@@ -166,7 +171,7 @@ export function GameExperience({
       {activeStage === "twist" && (
         <TwistQuestion
           onAnswer={(choice) => {
-            if (!progress.voted) {
+            if (shouldRecordVote && !progress.voted) {
               setProgress((p) => ({ ...p, voted: true }));
               fetch("/api/gender-reveal/guess", {
                 method: "POST",
