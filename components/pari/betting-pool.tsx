@@ -62,6 +62,16 @@ export function BettingPool({
   const winningPool = winningGender === "girl" ? poolGirl : winningGender === "boy" ? poolBoy : 0;
   const nobodyWon = closed && winningGender !== null && winningPool === 0;
 
+  const estimatedReturn = useMemo(() => {
+    const amountNumber = Number(amount);
+    if (!choice || !Number.isFinite(amountNumber) || amountNumber <= 0) return null;
+    const currentPoolForChoice = choice === "girl" ? poolGirl : poolBoy;
+    const newPoolForChoice = currentPoolForChoice + amountNumber;
+    const newTotal = total + amountNumber;
+    const estimatedOdds = newTotal / newPoolForChoice;
+    return { odds: estimatedOdds, payout: amountNumber * estimatedOdds };
+  }, [amount, choice, poolGirl, poolBoy, total]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -211,6 +221,17 @@ export function BettingPool({
                   Garçon 💙
                 </Button>
               </div>
+              {estimatedReturn && (
+                <p className="rounded-lg bg-secondary/50 p-3 text-center text-sm">
+                  Si {choice === "girl" ? "Fille" : "Garçon"} gagne (cote estimée à{" "}
+                  <span className="font-semibold">{estimatedReturn.odds.toFixed(2)}x</span>), tu
+                  recevrais environ{" "}
+                  <span className="font-semibold text-primary">
+                    {formatMoney(estimatedReturn.payout)}
+                  </span>{" "}
+                  (mise incluse).
+                </p>
+              )}
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" size="lg" className="w-full" disabled={busy}>
                 {busy ? "Envoi..." : "Placer ma mise"}
