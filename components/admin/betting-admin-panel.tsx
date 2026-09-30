@@ -313,8 +313,8 @@ export function BettingAdminPanel({
         {bets.length === 0 ? (
           <p className="text-sm text-muted-foreground">Aucune mise pour le moment.</p>
         ) : (
-          <div className="overflow-hidden rounded-xl border">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-xl border">
+            <table className="w-full min-w-[560px] text-sm">
               <thead className="bg-secondary/50 text-left">
                 <tr>
                   <th className="p-3">Nom</th>
