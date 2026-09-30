@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, FlaskConical } from "lucide-react";
+import { Sparkles, FlaskConical, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,9 @@ export function BettingPool({
   const [choice, setChoice] = useState<"girl" | "boy" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<{ amount: number; choice: "girl" | "boy" } | null>(
+    null
+  );
 
   const { poolGirl, poolBoy, total, oddsGirl, oddsBoy } = useMemo(() => {
     const poolGirl = initialBets
@@ -106,6 +109,7 @@ export function BettingPool({
         setError(data?.message ?? "Impossible de placer ce pari.");
         return;
       }
+      setConfirmation({ amount: amountNumber, choice });
       setName("");
       setAmount("");
       setChoice(null);
@@ -265,6 +269,33 @@ export function BettingPool({
             </form>
           </CardContent>
         </Card>
+      )}
+
+      {confirmation && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setConfirmation(null)}
+        >
+          <Card className="max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <CardContent className="space-y-3 p-6 text-center">
+              <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
+              <p className="font-display text-xl font-semibold">Mise enregistrée !</p>
+              <p className="text-sm text-muted-foreground">
+                Ta mise de {formatMoney(confirmation.amount)} sur{" "}
+                {confirmation.choice === "girl" ? "Fille 💕" : "Garçon 💙"} a bien été reçue.
+                N&apos;oublie pas d&apos;envoyer le virement Interac à{" "}
+                <span className="font-medium text-foreground">lafreniere.karl10@gmail.com</span>.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Reviens dans quelques minutes : ta mise ne compte dans la cote qu&apos;une fois
+                acceptée par l&apos;organisateur.
+              </p>
+              <Button className="w-full" onClick={() => setConfirmation(null)}>
+                Compris !
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
