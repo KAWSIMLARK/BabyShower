@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, TrendingUp } from "lucide-react";
+import { Sparkles, TrendingUp, FlaskConical } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 export interface BetRow {
   id: string;
@@ -22,13 +23,19 @@ function formatMoney(value: number) {
 export function BettingPool({
   initialBets,
   closed,
+  bettingEnabled,
+  isAdminViewer,
   winningGender,
 }: {
   initialBets: BetRow[];
   closed: boolean;
+  bettingEnabled: boolean;
+  isAdminViewer: boolean;
   winningGender: "girl" | "boy" | null;
 }) {
   const router = useRouter();
+  const notYetOpen = !closed && !bettingEnabled;
+  const canBet = !closed && (bettingEnabled || isAdminViewer);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [choice, setChoice] = useState<"girl" | "boy" | null>(null);
@@ -97,6 +104,11 @@ export function BettingPool({
   return (
     <div className="space-y-8">
       <div className="space-y-2 text-center">
+        {notYetOpen && (
+          <Badge variant="outline" className="gap-1">
+            <FlaskConical className="h-3 w-3" /> MODE TEST
+          </Badge>
+        )}
         <h1 className="font-display text-3xl font-bold sm:text-4xl">
           Pari amical : fille ou garçon ?
         </h1>
@@ -148,6 +160,16 @@ export function BettingPool({
                 Les mises sont fermées — le résultat s&apos;en vient !
               </p>
             )}
+          </CardContent>
+        </Card>
+      ) : !canBet ? (
+        <Card className="bg-secondary/40">
+          <CardContent className="space-y-1 p-6 text-center">
+            <p className="font-display text-xl font-semibold">Pas encore ouvert</p>
+            <p className="text-sm text-muted-foreground">
+              Le pari n&apos;est pas encore accessible aux invité·es — revenez un peu plus
+              tard !
+            </p>
           </CardContent>
         </Card>
       ) : (

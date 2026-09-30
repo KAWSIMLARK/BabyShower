@@ -11,7 +11,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("gender_reveal_settings")
-    .select("game_enabled, baby_gender")
+    .select("game_enabled, baby_gender, betting_enabled")
     .eq("id", true)
     .maybeSingle();
 
@@ -23,10 +23,15 @@ export async function GET() {
   return NextResponse.json({
     game_enabled: data?.game_enabled ?? false,
     baby_gender: data?.baby_gender ?? null,
+    betting_enabled: data?.betting_enabled ?? false,
   });
 }
 
-type UpdateBody = { game_enabled?: boolean; baby_gender?: "girl" | "boy" | null };
+type UpdateBody = {
+  game_enabled?: boolean;
+  baby_gender?: "girl" | "boy" | null;
+  betting_enabled?: boolean;
+};
 
 export async function POST(request: Request) {
   let body: UpdateBody;
@@ -41,6 +46,7 @@ export async function POST(request: Request) {
   if (body.baby_gender === "girl" || body.baby_gender === "boy" || body.baby_gender === null) {
     update.baby_gender = body.baby_gender;
   }
+  if (typeof body.betting_enabled === "boolean") update.betting_enabled = body.betting_enabled;
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ message: "Aucun champ valide à mettre à jour." }, { status: 400 });
@@ -51,7 +57,7 @@ export async function POST(request: Request) {
     .from("gender_reveal_settings")
     .update(update)
     .eq("id", true)
-    .select("game_enabled, baby_gender");
+    .select("game_enabled, baby_gender, betting_enabled");
 
   if (error) {
     console.error("Erreur lors de la mise à jour de la configuration du jeu :", error);

@@ -221,6 +221,11 @@ insert into public.gender_reveal_settings (id, game_enabled)
 values (true, false)
 on conflict (id) do nothing;
 
+-- Contrôle séparé pour le pari amical (voir plus bas) : permet de le tester
+-- en privé avant de l'ouvrir aux invité·es, indépendamment du jeu.
+alter table public.gender_reveal_settings
+  add column if not exists betting_enabled boolean not null default false;
+
 alter table public.gender_reveal_settings enable row level security;
 
 -- Seul l'administrateur authentifié peut lire/modifier la configuration
@@ -243,6 +248,20 @@ as $$
 $$;
 
 grant execute on function public.get_gender_reveal_enabled() to anon, authenticated;
+
+-- Statut public du pari amical (voir plus bas) : uniquement le booléen
+-- "ouvert aux invité·es", jamais aucune autre donnée de configuration.
+create or replace function public.get_betting_enabled()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select coalesce((select betting_enabled from public.gender_reveal_settings where id = true), false);
+$$;
+
+grant execute on function public.get_betting_enabled() to anon, authenticated;
 
 -- Révélation : ne renvoie le sexe qu'au moment où le joueur termine les 3
 -- mini-jeux (appelée par /api/gender-reveal/reveal, jamais depuis le HTML ou
@@ -320,12 +339,33 @@ create policy "Tout le monde peut consulter les paris"
   to anon, authenticated
   using (true);
 
-create policy "Tout le monde peut parier tant que c'est ouvert"
+-- Migration pour une table gender_bets déjà créée avant l'ajout du mode
+-- test (betting_enabled) : recrée la politique avec la double condition,
+-- séparée par rôle pour que l'admin puisse tester avant l'ouverture publique.
+drop policy if exists "Tout le monde peut parier tant que c'est ouvert" on public.gender_bets;
+
+-- Les invité·es (anon) ne peuvent parier que si l'admin a ouvert le pari
+-- publiquement, et jamais après la révélation.
+create policy "Les invités peuvent parier une fois le pari ouvert"
   on public.gender_bets
   for insert
-  to anon, authenticated
+  to anon
   with check (
-    coalesce((select game_enabled from public.gender_reveal_settings where id = true), false) = false
+    coalesce(
+      (select betting_enabled and not game_enabled from public.gender_reveal_settings where id = true),
+      false
+    )
+  );
+
+-- L'administrateur (seul compte "authenticated" possible sur ce site) peut
+-- tester le formulaire de pari à tout moment avant la révélation, même en
+-- mode test — pratique pour vérifier le rendu avant d'ouvrir aux invité·es.
+create policy "L'administrateur peut parier en tout temps avant la révélation"
+  on public.gender_bets
+  for insert
+  to authenticated
+  with check (
+    coalesce((select not game_enabled from public.gender_reveal_settings where id = true), true)
   );
 
 -- Permet à l'administrateur de supprimer un pari erroné (doublon, annulation,
