@@ -391,21 +391,20 @@ drop policy if exists "Les invités peuvent parier une fois le pari ouvert" on p
 drop policy if exists "L'administrateur peut parier en tout temps avant la révélation" on public.gender_bets;
 
 -- Les invité·es (anon) ne peuvent parier que si l'admin a ouvert le pari
--- publiquement, avant la date limite, et jamais après la révélation.
+-- publiquement, avant la date limite, et jamais après la révélation. Passe
+-- par les fonctions "security definer" ci-dessus (plutôt qu'une lecture
+-- directe de gender_reveal_settings) car cette table est elle-même protégée
+-- par RLS et un visiteur anonyme n'a pas le droit de la lire directement —
+-- une lecture directe échouerait silencieusement et bloquerait tous les
+-- paris des invité·es.
 create policy "Les invités peuvent parier une fois le pari ouvert"
   on public.gender_bets
   for insert
   to anon
   with check (
-    coalesce(
-      (
-        select betting_enabled
-          and not game_enabled
-          and (betting_deadline is null or now() < betting_deadline)
-        from public.gender_reveal_settings where id = true
-      ),
-      false
-    )
+    public.get_betting_enabled()
+    and not public.get_gender_reveal_enabled()
+    and (public.get_betting_deadline() is null or now() < public.get_betting_deadline())
   );
 
 -- L'administrateur (seul compte "authenticated" possible sur ce site) peut
@@ -417,13 +416,8 @@ create policy "L'administrateur peut parier en tout temps avant la révélation"
   for insert
   to authenticated
   with check (
-    coalesce(
-      (
-        select not game_enabled and (betting_deadline is null or now() < betting_deadline)
-        from public.gender_reveal_settings where id = true
-      ),
-      true
-    )
+    not public.get_gender_reveal_enabled()
+    and (public.get_betting_deadline() is null or now() < public.get_betting_deadline())
   );
 
 -- Permet à l'administrateur de supprimer un pari erroné (doublon, annulation,
