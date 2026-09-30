@@ -113,10 +113,11 @@ export function BettingPool({
           Pari amical : fille ou garçon ?
         </h1>
         <p className="mx-auto max-w-xl text-muted-foreground">
-          Aucun argent ne transite par ce site — payez votre mise en personne ou par
-          Interac. Plus les mises s&apos;accumulent d&apos;un côté, plus la cote de
-          l&apos;autre côté grimpe. À la révélation, les gagnant·es récupèrent leur mise,
-          plus leur part du pot des perdant·es.
+          Aucun paiement en ligne : envoyez votre mise par virement Interac à{" "}
+          <span className="font-medium text-foreground">lafreniere.karl10@gmail.com</span>. Plus
+          les mises s&apos;accumulent d&apos;un côté, plus la cote de l&apos;autre côté grimpe. À
+          la révélation, les gagnant·es récupèrent leur mise, plus leur part du pot des
+          perdant·es.
         </p>
       </div>
 

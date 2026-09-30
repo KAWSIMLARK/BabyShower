@@ -167,7 +167,7 @@ export default async function HomePage() {
           </h2>
           <p className="mx-auto mt-2 max-w-md text-muted-foreground">
             Pariez pour rire sur le sexe de bébé — la cote s&apos;ajuste en direct selon les
-            mises. Aucun paiement en ligne, tout se règle entre vous.
+            mises. Paiement par virement Interac à lafreniere.karl10@gmail.com.
           </p>
           <Button asChild size="lg" className="mt-6">
             <Link href="/pari">
