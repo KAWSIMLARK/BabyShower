@@ -242,15 +242,22 @@ export function GenderRevealPanel({
           <Button asChild size="sm" variant="outline">
             <Link href="/jeux">Tester le jeu (les 3 missions)</Link>
           </Button>
-          <Button asChild size="sm" variant="ghost" disabled={!gender}>
-            <Link href={gender ? "/jeux?apercu=reveal" : "#"} aria-disabled={!gender}>
+          {gender ? (
+            <Button asChild size="sm" variant="ghost">
+              <Link href="/jeux?apercu=reveal">
+                <Sparkle className="h-4 w-4" /> Voir l&apos;animation de révélation
+              </Link>
+            </Button>
+          ) : (
+            <Button size="sm" variant="ghost" disabled>
               <Sparkle className="h-4 w-4" /> Voir l&apos;animation de révélation
-            </Link>
-          </Button>
+            </Button>
+          )}
         </div>
         {!gender && (
           <p className="text-xs text-muted-foreground">
-            Choisis d&apos;abord le sexe ci-dessus pour pouvoir prévisualiser l&apos;animation.
+            Choisis d&apos;abord le sexe ci-dessus (bouton « Fille » ou « Garçon », puis «
+            Confirmer ») pour pouvoir prévisualiser l&apos;animation.
           </p>
         )}
       </CardContent>
