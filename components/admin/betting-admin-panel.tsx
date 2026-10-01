@@ -73,6 +73,24 @@ export function BettingAdminPanel({
     };
   }, [bets]);
 
+  // Montant à transférer à cette personne SI son côté gagne, selon la cote
+  // actuelle (mise + part du pot des perdant·es). Pour une mise encore "en
+  // attente", calculé comme si elle était acceptée dès maintenant — donc une
+  // estimation qui peut encore bouger tant que d'autres mises sont traitées.
+  function payoutIfWins(bet: AdminBetRow): number | null {
+    if (bet.status === "rejected") return null;
+    const amount = Number(bet.amount);
+    const currentPoolForChoice = bet.choice === "girl" ? poolGirl : poolBoy;
+
+    if (bet.status === "accepted") {
+      return currentPoolForChoice > 0 ? (amount * total) / currentPoolForChoice : amount;
+    }
+
+    const newPoolForChoice = currentPoolForChoice + amount;
+    const newTotal = total + amount;
+    return (amount * newTotal) / newPoolForChoice;
+  }
+
   async function toggleBetting() {
     setToggleBusy(true);
     setError(null);
@@ -314,18 +332,21 @@ export function BettingAdminPanel({
           <p className="text-sm text-muted-foreground">Aucune mise pour le moment.</p>
         ) : (
           <div className="overflow-x-auto rounded-xl border">
-            <table className="w-full min-w-[560px] text-sm">
+            <table className="w-full min-w-[680px] text-sm">
               <thead className="bg-secondary/50 text-left">
                 <tr>
                   <th className="p-3">Nom</th>
                   <th className="p-3">Mise</th>
                   <th className="p-3">Choix</th>
                   <th className="p-3">Statut</th>
+                  <th className="p-3">Si gagnant·e</th>
                   <th className="p-3" />
                 </tr>
               </thead>
               <tbody>
-                {bets.map((bet) => (
+                {bets.map((bet) => {
+                  const payout = payoutIfWins(bet);
+                  return (
                   <tr key={bet.id} className="border-t">
                     <td className="p-3">{bet.bettor_name}</td>
                     <td className="p-3">{formatMoney(Number(bet.amount))}</td>
@@ -342,6 +363,20 @@ export function BettingAdminPanel({
                       >
                         {statusLabel(bet.status)}
                       </Badge>
+                    </td>
+                    <td className="p-3">
+                      {payout === null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <span className="font-semibold text-primary">
+                          {formatMoney(payout)}
+                          {bet.status === "pending" && (
+                            <span className="ml-1 text-xs font-normal text-muted-foreground">
+                              (estimé)
+                            </span>
+                          )}
+                        </span>
+                      )}
                     </td>
                     <td className="p-3">
                       <div className="flex items-center justify-end gap-1">
@@ -378,7 +413,8 @@ export function BettingAdminPanel({
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
