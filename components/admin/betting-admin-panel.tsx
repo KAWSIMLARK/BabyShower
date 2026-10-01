@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { TrendingUp, Trash2, RotateCcw, Check, X, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Convertit un ISO (UTC) en valeur locale pour <input type="datetime-local">.
 function isoToLocalInput(iso: string | null) {
@@ -24,6 +24,8 @@ export interface AdminBetRow {
   amount: number;
   choice: "girl" | "boy";
   status: BetStatus;
+  payout_sent: boolean;
+  refunded: boolean;
   created_at: string;
 }
 
@@ -174,6 +176,26 @@ export function BettingAdminPanel({
     }
   }
 
+  async function handleFlagChange(id: string, field: "payout_sent" | "refunded", value: boolean) {
+    setBusyId(id);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/bets/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        setError(data?.message ?? "Impossible de mettre à jour ce pari.");
+        return;
+      }
+      setBets((prev) => prev.map((b) => (b.id === id ? { ...b, [field]: value } : b)));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function handleDelete(id: string) {
     setBusyId(id);
     setError(null);
@@ -261,10 +283,8 @@ export function BettingAdminPanel({
         <div className="rounded-xl border p-4">
           <p className="text-sm font-semibold">Visibilité publique</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Tant que c&apos;est en mode test, le bouton n&apos;apparaît pas sur la page
-            d&apos;accueil et les invité·es qui tombent sur <code>/pari</code> voient un message
-            « pas encore ouvert ». Tu peux quand même tester le formulaire toi-même — pense à
-            réinitialiser les paris ci-dessous avant d&apos;ouvrir pour de vrai.
+            La page publique du pari a été retirée du site — ce réglage et les mises déjà
+            reçues restent ici au cas où tu la remettrais en ligne plus tard.
           </p>
           <Button
             size="sm"
@@ -332,7 +352,7 @@ export function BettingAdminPanel({
           <p className="text-sm text-muted-foreground">Aucune mise pour le moment.</p>
         ) : (
           <div className="overflow-x-auto rounded-xl border">
-            <table className="w-full min-w-[680px] text-sm">
+            <table className="w-full min-w-[860px] text-sm">
               <thead className="bg-secondary/50 text-left">
                 <tr>
                   <th className="p-3">Nom</th>
@@ -340,6 +360,8 @@ export function BettingAdminPanel({
                   <th className="p-3">Choix</th>
                   <th className="p-3">Statut</th>
                   <th className="p-3">Si gagnant·e</th>
+                  <th className="p-3 text-center">Virement envoyé</th>
+                  <th className="p-3 text-center">Remboursé</th>
                   <th className="p-3" />
                 </tr>
               </thead>
@@ -377,6 +399,26 @@ export function BettingAdminPanel({
                           )}
                         </span>
                       )}
+                    </td>
+                    <td className="p-3 text-center">
+                      <Checkbox
+                        checked={bet.payout_sent}
+                        disabled={busyId === bet.id}
+                        onCheckedChange={(checked) =>
+                          handleFlagChange(bet.id, "payout_sent", checked === true)
+                        }
+                        aria-label="Virement du gain envoyé"
+                      />
+                    </td>
+                    <td className="p-3 text-center">
+                      <Checkbox
+                        checked={bet.refunded}
+                        disabled={busyId === bet.id}
+                        onCheckedChange={(checked) =>
+                          handleFlagChange(bet.id, "refunded", checked === true)
+                        }
+                        aria-label="Mise remboursée"
+                      />
                     </td>
                     <td className="p-3">
                       <div className="flex items-center justify-end gap-1">
@@ -419,10 +461,6 @@ export function BettingAdminPanel({
             </table>
           </div>
         )}
-
-        <Button asChild size="sm" variant="outline">
-          <Link href="/pari">Voir la page /pari</Link>
-        </Button>
       </CardContent>
     </Card>
   );

@@ -13,23 +13,34 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     return NextResponse.json({ message: "Identifiant invalide." }, { status: 400 });
   }
 
-  let body: { status?: string };
+  let body: { status?: string; payout_sent?: boolean; refunded?: boolean };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ message: "Requête invalide." }, { status: 400 });
   }
 
-  if (body.status !== "accepted" && body.status !== "rejected" && body.status !== "pending") {
-    return NextResponse.json({ message: "Statut invalide." }, { status: 400 });
+  const update: { status?: string; payout_sent?: boolean; refunded?: boolean } = {};
+
+  if (body.status !== undefined) {
+    if (body.status !== "accepted" && body.status !== "rejected" && body.status !== "pending") {
+      return NextResponse.json({ message: "Statut invalide." }, { status: 400 });
+    }
+    update.status = body.status;
+  }
+  if (typeof body.payout_sent === "boolean") update.payout_sent = body.payout_sent;
+  if (typeof body.refunded === "boolean") update.refunded = body.refunded;
+
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json({ message: "Aucun champ valide à mettre à jour." }, { status: 400 });
   }
 
   const supabase = createClient();
   const { data, error } = await supabase
     .from("gender_bets")
-    .update({ status: body.status })
+    .update(update)
     .eq("id", params.id)
-    .select("id, status");
+    .select("id, status, payout_sent, refunded");
 
   if (error) {
     console.error("Erreur lors de la mise à jour du statut du pari :", error);

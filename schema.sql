@@ -362,6 +362,16 @@ create table if not exists public.gender_bets (
 alter table public.gender_bets
   add column if not exists status text not null default 'pending';
 
+-- Suivi manuel (cases à cocher dans /admin) de l'argent qui sort une fois le
+-- pari réglé : le virement du gain envoyé à un·e gagnant·e, ou le
+-- remboursement de la mise envoyé si le pari est annulé/refusé après coup.
+-- Purement informatif pour l'admin — n'affecte aucun calcul de cote.
+alter table public.gender_bets
+  add column if not exists payout_sent boolean not null default false;
+
+alter table public.gender_bets
+  add column if not exists refunded boolean not null default false;
+
 do $$
 begin
   if not exists (
@@ -430,6 +440,8 @@ create policy "Seuls les utilisateurs authentifiés peuvent supprimer un pari"
 
 -- Permet à l'administrateur d'accepter/refuser une mise (une fois le
 -- virement reçu ou non) — seules les mises "accepted" comptent dans la cote.
+-- Couvre aussi les cases à cocher payout_sent/refunded ci-dessus (même
+-- politique "update", pas besoin d'une politique distincte).
 create policy "Seuls les utilisateurs authentifiés peuvent modifier le statut d'un pari"
   on public.gender_bets
   for update
