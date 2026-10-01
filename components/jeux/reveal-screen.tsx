@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Confetti } from "@/components/jeux/confetti";
 import { jeuxConfig } from "@/lib/jeux/config";
@@ -81,6 +82,15 @@ export function RevealScreen({
         {theme.title}
       </p>
       <p className="text-lg text-foreground/80">{theme.subtitle}</p>
+      {gender === "boy" && (
+        <Image
+          src="/images/echo-garcon.jpg"
+          alt="Échographie confirmant un garçon"
+          width={2000}
+          height={1481}
+          className="mt-2 w-full max-w-xs rounded-2xl shadow-lg sm:max-w-sm"
+        />
+      )}
       <Button variant="outline" size="sm" className="mt-4" onClick={onRestart}>
         {jeuxConfig.restartLabel}
       </Button>
