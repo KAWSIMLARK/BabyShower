@@ -66,13 +66,14 @@ export function RevealScreen({
   }
 
   const theme = jeuxConfig.reveal[gender];
+  const sportsEmojis = ["⚽", "🏀", "🏈", "⚾", "🎾", "🏒", "🏐", "🥎"];
 
   return (
     <div
       className="flex min-h-[60vh] flex-col items-center justify-center gap-5 rounded-3xl px-4 text-center"
       style={{ backgroundColor: theme.colorSoft }}
     >
-      <Confetti color={theme.color} />
+      <Confetti color={theme.color} emojis={gender === "boy" ? sportsEmojis : undefined} />
       <p
         className="animate-in zoom-in fade-in font-display text-4xl font-bold duration-700 sm:text-5xl"
         style={{ color: theme.color }}
