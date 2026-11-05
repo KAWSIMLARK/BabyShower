@@ -4,14 +4,16 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 // Liste publique des cadeaux (ou livres) encore disponibles (retirés une
-// fois achetés). ?category=livre pour la liste d'idées de livres.
+// fois achetés). ?category=livre pour la liste d'idées de livres,
+// ?category=bebe pour le registre pour bébé.
 export async function GET(request: Request) {
-  const category = new URL(request.url).searchParams.get("category") === "livre" ? "livre" : "cadeau";
+  const param = new URL(request.url).searchParams.get("category");
+  const category = param === "livre" ? "livre" : param === "bebe" ? "bebe" : "cadeau";
   const supabase = createClient();
 
   const { data, error } = await supabase
     .from("gift_items")
-    .select("id, name, description, price, link_url")
+    .select(category === "bebe" ? "id, name, description, price, link_url, image_url" : "id, name, description, price, link_url")
     .eq("category", category)
     .eq("is_purchased", false)
     .order("sort_order", { ascending: true })

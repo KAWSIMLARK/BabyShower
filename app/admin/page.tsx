@@ -20,6 +20,7 @@ export default async function AdminPage() {
     { data: genderRevealRow, error: genderRevealError },
     { data: guessData, error: guessError },
     { data: betsData, error: betsError },
+    { data: babyData, error: babyError },
   ] = await Promise.all([
     supabase.from("rsvp_responses").select("*").order("created_at", { ascending: false }),
     supabase.from("registry_lock").select("is_locked").eq("id", true).maybeSingle(),
@@ -45,6 +46,12 @@ export default async function AdminPage() {
       .from("gender_bets")
       .select("id, bettor_name, amount, choice, status, payout_sent, refunded, created_at")
       .order("created_at", { ascending: false }),
+    supabase
+      .from("gift_items")
+      .select("*")
+      .eq("category", "bebe")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
   ]);
 
   if (lockError) console.error("Erreur de lecture du verrou du registre :", lockError);
@@ -54,6 +61,7 @@ export default async function AdminPage() {
     console.error("Erreur de lecture de la configuration du jeu :", genderRevealError);
   if (guessError) console.error("Erreur de lecture des votes :", guessError);
   if (betsError) console.error("Erreur de lecture des paris :", betsError);
+  if (babyError) console.error("Erreur de lecture du registre pour bébé :", babyError);
 
   const guessCounts = (guessData ?? []).reduce(
     (acc, row) => {
@@ -77,6 +85,7 @@ export default async function AdminPage() {
 
   const giftItems = maskIfLocked(giftData);
   const bookItems = maskIfLocked(bookData);
+  const babyItems = maskIfLocked(babyData);
 
   return (
     <main className="min-h-screen bg-secondary/30 px-6 py-10">
@@ -106,6 +115,7 @@ export default async function AdminPage() {
         <RegistriesPanel
           initialGiftItems={giftItems}
           initialBookItems={bookItems}
+          initialBabyItems={babyItems}
           initialLocked={isLocked}
         />
 

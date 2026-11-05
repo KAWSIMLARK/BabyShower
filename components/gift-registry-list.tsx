@@ -11,6 +11,7 @@ export type PublicGiftItem = {
   description: string | null;
   price: number | null;
   link_url: string | null;
+  image_url?: string | null;
 };
 
 const priceFormatter = new Intl.NumberFormat("fr-CA", {
@@ -22,7 +23,7 @@ const priceFormatter = new Intl.NumberFormat("fr-CA", {
 export function GiftRegistryList({
   initialItems,
   emptyTitle = "Aucun cadeau disponible pour le moment",
-  emptyMessage = "Soit tout a déjà trouvé preneur, soit la liste n'est pas encore prête — consultez aussi le registre Amazon depuis la page d'accueil.",
+  emptyMessage = "Soit tout a déjà trouvé preneur, soit la liste n'est pas encore prête.",
 }: {
   initialItems: PublicGiftItem[];
   emptyTitle?: string;
@@ -78,7 +79,18 @@ export function GiftRegistryList({
       )}
       <div className="grid gap-4 sm:grid-cols-2">
         {items.map((item) => (
-          <Card key={item.id} className="flex flex-col bg-white/70">
+          <Card key={item.id} className="flex flex-col overflow-hidden bg-white/70">
+            {item.image_url && (
+              <div className="flex h-44 items-center justify-center bg-white p-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.image_url}
+                  alt={item.name}
+                  loading="lazy"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+            )}
             <CardContent className="flex flex-1 flex-col gap-3 p-5">
               <div>
                 <p className="font-display text-lg font-semibold">{item.name}</p>

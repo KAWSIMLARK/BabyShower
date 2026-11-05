@@ -15,6 +15,4 @@ export const siteConfig = {
   },
   description:
     "Confirmez votre présence au baby shower de Bébé Lafrenière et laissez un message de bienvenue.",
-  amazonRegistryUrl:
-    "https://www.amazon.ca/baby-reg/karl-lafreniere-fvrier-2027-trois-rivieres/28YPZXQGAC0O0",
 } as const;

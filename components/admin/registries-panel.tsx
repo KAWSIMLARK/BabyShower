@@ -1,17 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Gift, BookOpen } from "lucide-react";
+import { Gift, BookOpen, Baby } from "lucide-react";
 import { RegistryLockControl } from "@/components/admin/registry-lock-control";
 import { CategoryRegistryManager, type GiftItemRow } from "@/components/admin/category-registry-manager";
 
 export function RegistriesPanel({
   initialGiftItems,
   initialBookItems,
+  initialBabyItems,
   initialLocked,
 }: {
   initialGiftItems: GiftItemRow[];
   initialBookItems: GiftItemRow[];
+  initialBabyItems: GiftItemRow[];
   initialLocked: boolean;
 }) {
   const [locked, setLocked] = useState(initialLocked);
@@ -19,6 +21,18 @@ export function RegistriesPanel({
   return (
     <div className="space-y-6">
       <RegistryLockControl locked={locked} onLockedChange={setLocked} />
+
+      <CategoryRegistryManager
+        category="bebe"
+        title="Registre pour bébé"
+        itemLabel="un article pour bébé"
+        nameLabel="Nom de l'article"
+        namePlaceholder="Ex : Porte-bébé"
+        emptyIcon={Baby}
+        emptyMessage="Aucun article ajouté pour le moment."
+        initialItems={initialBabyItems}
+        locked={locked}
+      />
 
       <CategoryRegistryManager
         category="cadeau"

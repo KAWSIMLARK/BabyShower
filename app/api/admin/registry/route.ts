@@ -4,10 +4,10 @@ import { resolveIsLocked } from "@/lib/registry-lock";
 
 export const dynamic = "force-dynamic";
 
-type Category = "cadeau" | "livre";
+type Category = "cadeau" | "livre" | "bebe";
 
 function parseCategory(value: string | null): Category {
-  return value === "livre" ? "livre" : "cadeau";
+  return value === "livre" ? "livre" : value === "bebe" ? "bebe" : "cadeau";
 }
 
 // Protégée par le middleware : seul l'administrateur authentifié atteint ce code.
@@ -53,6 +53,7 @@ export async function POST(request: Request) {
     description?: string;
     price?: number | null;
     linkUrl?: string;
+    imageUrl?: string;
     category?: string;
   };
   try {
@@ -73,11 +74,16 @@ export async function POST(request: Request) {
   const category = parseCategory(body.category ?? null);
 
   const supabase = createClient();
+  const imageUrl = body.imageUrl?.trim();
   const { error } = await supabase.from("gift_items").insert({
     name,
     description: body.description?.trim() || null,
     price: body.price ?? null,
     link_url: body.linkUrl?.trim() || null,
+    // N'envoie la colonne que si une photo est fournie : l'ajout d'un cadeau
+    // ou d'un livre continue de fonctionner même si la migration "image_url"
+    // n'a pas encore été exécutée.
+    ...(imageUrl ? { image_url: imageUrl } : {}),
     category,
   });
 

@@ -9,6 +9,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     description?: string;
     price?: number | null;
     linkUrl?: string;
+    imageUrl?: string;
     isPurchased?: boolean;
   };
   try {
@@ -32,6 +33,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (body.description !== undefined) update.description = body.description?.trim() || null;
   if (body.price !== undefined) update.price = body.price;
   if (body.linkUrl !== undefined) update.link_url = body.linkUrl?.trim() || null;
+  // Seulement si le champ est explicitement envoyé (le formulaire admin ne
+  // l'envoie que pour le registre bébé), pour ne pas toucher à la colonne
+  // ailleurs.
+  if (body.imageUrl !== undefined) update.image_url = body.imageUrl?.trim() || null;
   if (body.isPurchased !== undefined) {
     // Permet à l'admin de remettre un cadeau en ligne s'il a été coché par
     // erreur, sans devoir le supprimer et le recréer.

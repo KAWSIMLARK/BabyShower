@@ -15,6 +15,7 @@ export type GiftItemRow = {
   description: string | null;
   price: number | null;
   link_url: string | null;
+  image_url?: string | null;
   is_purchased: boolean;
   purchased_at: string | null;
 };
@@ -25,8 +26,14 @@ const priceFormatter = new Intl.NumberFormat("fr-CA", {
   maximumFractionDigits: 0,
 });
 
-type NewItemForm = { name: string; price: string; linkUrl: string; description: string };
-const emptyForm: NewItemForm = { name: "", price: "", linkUrl: "", description: "" };
+type NewItemForm = {
+  name: string;
+  price: string;
+  linkUrl: string;
+  description: string;
+  imageUrl: string;
+};
+const emptyForm: NewItemForm = { name: "", price: "", linkUrl: "", description: "", imageUrl: "" };
 
 export function CategoryRegistryManager({
   category,
@@ -39,7 +46,7 @@ export function CategoryRegistryManager({
   initialItems,
   locked,
 }: {
-  category: "cadeau" | "livre";
+  category: "cadeau" | "livre" | "bebe";
   title: string;
   itemLabel: string;
   nameLabel: string;
@@ -94,6 +101,7 @@ export function CategoryRegistryManager({
           description: newItem.description || undefined,
           price: newItem.price ? Number(newItem.price) : null,
           linkUrl: newItem.linkUrl || undefined,
+          ...(category === "bebe" ? { imageUrl: newItem.imageUrl || undefined } : {}),
           category,
         }),
       });
@@ -117,6 +125,7 @@ export function CategoryRegistryManager({
       price: item.price != null ? String(item.price) : "",
       linkUrl: item.link_url ?? "",
       description: item.description ?? "",
+      imageUrl: item.image_url ?? "",
     });
   }
 
@@ -131,6 +140,7 @@ export function CategoryRegistryManager({
           description: editForm.description || null,
           price: editForm.price ? Number(editForm.price) : null,
           linkUrl: editForm.linkUrl || null,
+          ...(category === "bebe" ? { imageUrl: editForm.imageUrl || null } : {}),
         }),
       });
       if (response.ok) {
@@ -218,6 +228,16 @@ export function CategoryRegistryManager({
                 placeholder="https://..."
               />
             </div>
+            {category === "bebe" && (
+              <div className="grid gap-1.5">
+                <Label>Photo (lien ou chemin, optionnel)</Label>
+                <Input
+                  value={newItem.imageUrl}
+                  onChange={(e) => setNewItem((f) => ({ ...f, imageUrl: e.target.value }))}
+                  placeholder="https://… ou /images/registre-bebe/…"
+                />
+              </div>
+            )}
             <div className="grid gap-1.5">
               <Label>Description (optionnel)</Label>
               <Textarea
@@ -269,6 +289,13 @@ export function CategoryRegistryManager({
                   onChange={(e) => setEditForm((f) => ({ ...f, linkUrl: e.target.value }))}
                   placeholder="Lien"
                 />
+                {category === "bebe" && (
+                  <Input
+                    value={editForm.imageUrl}
+                    onChange={(e) => setEditForm((f) => ({ ...f, imageUrl: e.target.value }))}
+                    placeholder="Photo (lien ou chemin)"
+                  />
+                )}
                 <Textarea
                   value={editForm.description}
                   onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
@@ -287,7 +314,16 @@ export function CategoryRegistryManager({
           ) : (
             <Card key={item.id}>
               <CardContent className="flex items-start justify-between gap-4 p-5">
-                <div>
+                {category === "bebe" && item.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={item.image_url}
+                    alt=""
+                    loading="lazy"
+                    className="h-14 w-14 shrink-0 rounded-lg border bg-white object-contain"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold">{item.name}</p>
                     {!locked && (

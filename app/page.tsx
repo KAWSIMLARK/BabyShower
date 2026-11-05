@@ -4,7 +4,6 @@ import {
   MapPin,
   PartyPopper,
   Gift,
-  ExternalLink,
   BookOpen,
   Sparkles,
 } from "lucide-react";
@@ -139,10 +138,9 @@ export default async function HomePage() {
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Button asChild size="lg">
-            <a href={siteConfig.amazonRegistryUrl} target="_blank" rel="noopener noreferrer">
+            <Link href="/registre-bebe">
               <Gift className="h-4 w-4" /> Registre pour bébé
-              <ExternalLink className="h-3.5 w-3.5 opacity-60" />
-            </a>
+            </Link>
           </Button>
           <Button asChild variant="outline" size="lg">
             <Link href="/registre">
@@ -150,10 +148,6 @@ export default async function HomePage() {
             </Link>
           </Button>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Le registre Amazon s&apos;ouvre dans un nouvel onglet (Amazon ne permet pas
-          l&apos;affichage de ses pages ailleurs).
-        </p>
       </section>
 
       <BabyMessages />

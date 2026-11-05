@@ -118,15 +118,12 @@ comment on table public.gift_items is 'Registre de cadeaux personnalisé (plus d
 -- "category") : sans effet si la colonne existe déjà ou sur une base neuve.
 alter table public.gift_items add column if not exists category text not null default 'cadeau';
 
-do $$
-begin
-  if not exists (
-    select 1 from pg_constraint where conname = 'gift_items_category_check'
-  ) then
-    alter table public.gift_items
-      add constraint gift_items_category_check check (category in ('cadeau', 'livre'));
-  end if;
-end $$;
+-- 'bebe' = registre pour bébé (/registre-bebe), avec une photo par produit.
+alter table public.gift_items add column if not exists image_url text;
+
+alter table public.gift_items drop constraint if exists gift_items_category_check;
+alter table public.gift_items
+  add constraint gift_items_category_check check (category in ('cadeau', 'livre', 'bebe'));
 
 alter table public.gift_items enable row level security;
 
