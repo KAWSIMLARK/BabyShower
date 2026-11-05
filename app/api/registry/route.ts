@@ -13,11 +13,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase
     .from("gift_items")
-    .select(
-      category === "livre"
-        ? "id, name, description, price, link_url"
-        : "id, name, description, price, link_url, image_url",
-    )
+    .select("id, name, description, price, link_url, image_url")
     .eq("category", category)
     .eq("is_purchased", false)
     .order("sort_order", { ascending: true })

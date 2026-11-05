@@ -16,7 +16,7 @@ export default async function BookIdeasPage() {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("gift_items")
-    .select("id, name, description, price, link_url")
+    .select("id, name, description, price, link_url, image_url")
     .eq("category", "livre")
     .eq("is_purchased", false)
     .order("sort_order", { ascending: true })
