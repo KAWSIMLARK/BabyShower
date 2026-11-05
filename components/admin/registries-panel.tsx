@@ -17,6 +17,10 @@ export function RegistriesPanel({
   initialLocked: boolean;
 }) {
   const [locked, setLocked] = useState(initialLocked);
+  // Incrémenté à chaque déplacement d'un article entre le registre bébé et
+  // le registre de cadeaux spéciaux : les deux listes se rechargent.
+  const [refreshSignal, setRefreshSignal] = useState(0);
+  const handleMoved = () => setRefreshSignal((n) => n + 1);
 
   return (
     <div className="space-y-6">
@@ -32,6 +36,9 @@ export function RegistriesPanel({
         emptyMessage="Aucun article ajouté pour le moment."
         initialItems={initialBabyItems}
         locked={locked}
+        moveTo={{ category: "cadeau", label: "Registre de cadeaux spéciaux" }}
+        onMoved={handleMoved}
+        refreshSignal={refreshSignal}
       />
 
       <CategoryRegistryManager
@@ -44,6 +51,9 @@ export function RegistriesPanel({
         emptyMessage="Aucun cadeau ajouté pour le moment."
         initialItems={initialGiftItems}
         locked={locked}
+        moveTo={{ category: "bebe", label: "Registre pour bébé" }}
+        onMoved={handleMoved}
+        refreshSignal={refreshSignal}
       />
 
       <CategoryRegistryManager

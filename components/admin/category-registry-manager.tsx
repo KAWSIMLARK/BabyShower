@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, Trash2, Pencil, Check, X, type LucideIcon } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X, ArrowLeftRight, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,9 @@ export function CategoryRegistryManager({
   emptyMessage,
   initialItems,
   locked,
+  moveTo,
+  onMoved,
+  refreshSignal = 0,
 }: {
   category: "cadeau" | "livre" | "bebe";
   title: string;
@@ -55,8 +58,14 @@ export function CategoryRegistryManager({
   emptyMessage: string;
   initialItems: GiftItemRow[];
   locked: boolean;
+  // Liste vers laquelle un article peut être basculé (bouton ⇄) + callback
+  // pour que le parent recharge les deux listes après le déplacement.
+  moveTo?: { category: "cadeau" | "bebe"; label: string };
+  onMoved?: () => void;
+  refreshSignal?: number;
 }) {
   const [items, setItems] = useState(initialItems);
+  const [movingId, setMovingId] = useState<string | null>(null);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState<NewItemForm>(emptyForm);
@@ -87,7 +96,30 @@ export function CategoryRegistryManager({
     }
     refreshFromServer();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locked]);
+  }, [locked, refreshSignal]);
+
+  async function handleMove(item: GiftItemRow) {
+    if (!moveTo) return;
+    const confirmed = window.confirm(`Déplacer "${item.name}" vers « ${moveTo.label} » ?`);
+    if (!confirmed) return;
+    setMovingId(item.id);
+    try {
+      const response = await fetch(`/api/admin/registry/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: moveTo.category }),
+      });
+      if (response.ok) {
+        setItems((prev) => prev.filter((i) => i.id !== item.id));
+        onMoved?.();
+      } else {
+        const data = await response.json().catch(() => null);
+        window.alert(data?.message ?? "Impossible de déplacer cet article.");
+      }
+    } finally {
+      setMovingId(null);
+    }
+  }
 
   async function handleAddItem() {
     if (!newItem.name.trim()) return;
@@ -349,6 +381,16 @@ export function CategoryRegistryManager({
                   )}
                 </div>
                 <div className="flex shrink-0 gap-1">
+                  {moveTo && (
+                    <button
+                      onClick={() => handleMove(item)}
+                      disabled={movingId === item.id}
+                      className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+                      title={`Déplacer vers « ${moveTo.label} »`}
+                    >
+                      <ArrowLeftRight className="h-4 w-4" />
+                    </button>
+                  )}
                   <button
                     onClick={() => startEdit(item)}
                     className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"

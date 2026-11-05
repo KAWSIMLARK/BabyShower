@@ -10,6 +10,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     price?: number | null;
     linkUrl?: string;
     imageUrl?: string;
+    category?: string;
     isPurchased?: boolean;
   };
   try {
@@ -37,6 +38,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   // l'envoie que pour le registre bébé), pour ne pas toucher à la colonne
   // ailleurs.
   if (body.imageUrl !== undefined) update.image_url = body.imageUrl?.trim() || null;
+  // Déplacement d'un article entre le registre pour bébé et le registre de
+  // cadeaux spéciaux (les idées de livres restent une liste à part).
+  if (body.category !== undefined) {
+    if (body.category !== "cadeau" && body.category !== "bebe") {
+      return NextResponse.json({ message: "Liste de destination invalide." }, { status: 400 });
+    }
+    update.category = body.category;
+  }
   if (body.isPurchased !== undefined) {
     // Permet à l'admin de remettre un cadeau en ligne s'il a été coché par
     // erreur, sans devoir le supprimer et le recréer.
