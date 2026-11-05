@@ -101,7 +101,7 @@ export function CategoryRegistryManager({
           description: newItem.description || undefined,
           price: newItem.price ? Number(newItem.price) : null,
           linkUrl: newItem.linkUrl || undefined,
-          ...(category === "bebe" ? { imageUrl: newItem.imageUrl || undefined } : {}),
+          ...(category !== "livre" ? { imageUrl: newItem.imageUrl || undefined } : {}),
           category,
         }),
       });
@@ -140,7 +140,7 @@ export function CategoryRegistryManager({
           description: editForm.description || null,
           price: editForm.price ? Number(editForm.price) : null,
           linkUrl: editForm.linkUrl || null,
-          ...(category === "bebe" ? { imageUrl: editForm.imageUrl || null } : {}),
+          ...(category !== "livre" ? { imageUrl: editForm.imageUrl || null } : {}),
         }),
       });
       if (response.ok) {
@@ -228,7 +228,7 @@ export function CategoryRegistryManager({
                 placeholder="https://..."
               />
             </div>
-            {category === "bebe" && (
+            {category !== "livre" && (
               <div className="grid gap-1.5">
                 <Label>Photo (lien ou chemin, optionnel)</Label>
                 <Input
@@ -289,7 +289,7 @@ export function CategoryRegistryManager({
                   onChange={(e) => setEditForm((f) => ({ ...f, linkUrl: e.target.value }))}
                   placeholder="Lien"
                 />
-                {category === "bebe" && (
+                {category !== "livre" && (
                   <Input
                     value={editForm.imageUrl}
                     onChange={(e) => setEditForm((f) => ({ ...f, imageUrl: e.target.value }))}
@@ -314,7 +314,7 @@ export function CategoryRegistryManager({
           ) : (
             <Card key={item.id}>
               <CardContent className="flex items-start justify-between gap-4 p-5">
-                {category === "bebe" && item.image_url && (
+                {category !== "livre" && item.image_url && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={item.image_url}
